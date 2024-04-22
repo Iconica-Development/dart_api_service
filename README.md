@@ -1,27 +1,22 @@
-<!-- 
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/guides/libraries/writing-package-pages). 
-
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-library-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/developing-packages). 
--->
-
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
+A simple API service that follows a FirebaseFirestore-like definition of resource endpoints.
 
 ## Features
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
+- Call endpoints with Put, Patch, Delete, Post and Get http methods
+- Use converters for type safe interaction with endpoints.
+- Allow authentication due to an auth credentials service.
 
 ## Getting started
 
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
+To use the this API service in your Dart or Flutter, add the following to the pubspec
+
+```yaml
+  flutter_start:
+    git:
+      url: https://github.com/Iconica-Development/dart_api_service
+      ref: <Version>
+```
 
 ## Usage
 
@@ -29,11 +24,44 @@ TODO: Include short and useful examples for package users. Add longer examples
 to `/example` folder. 
 
 ```dart
-const like = 'sample';
+  var authService = MockAuthService();
+  var apiService = HttpApiService(
+    baseUrl: Uri.parse("https://jsonplaceholder.typicode.com"),
+    authenticationService: authService,
+  );
+
+  var converter = ApiConverter.fromSerializable(PostComment.fromMap);
+
+  var endPoint = apiService.endpoint("/posts/:post");
+  var comments = endPoint
+      .child("/comments")
+      .withConverter(
+        converter.list(),
+      )
+      .authenticate()
+      .addHeaders({
+    "accept": "application/json",
+  }).withVariables({
+    "post": 1,
+  });
+
+  try {
+    var post = await comments.get();
+    print(post.result);
+  } on ApiException catch (e) {
+    print(e.statusCode);
+    print(e.inner.body);
+  }
 ```
 
-## Additional information
+## Issues
 
-TODO: Tell users more about the package: where to find more information, how to 
-contribute to the package, how to file issues, what response they can expect 
-from the package authors, and more.
+Please file any issues, bugs or feature request as an issue on our [GitHub](https://github.com/Iconica-Development/dart_api_service) page. Commercial support is available if you need help with integration with your app or services. You can contact us at [support@iconica.nl](mailto:support@iconica.nl).
+
+## Want to contribute
+
+If you would like to contribute to the plugin (e.g. by improving the documentation, solving a bug or adding a cool new feature), please carefully review our [contribution guide](./CONTRIBUTING.md) and send us your [pull request](https://github.com/Iconica-Development/dart_api_service/pulls).
+
+## Author
+
+This dart_api_service for Flutter and Dart is developed by [Iconica](https://iconica.nl). You can contact us at <support@iconica.nl>
