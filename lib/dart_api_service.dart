@@ -6,4 +6,7 @@
 /// - Basic Authentication
 library;
 
-export "src/dart_api_service_base.dart";
+export "src/api_service.dart";
+export "src/authentication_service.dart";
+export "src/converters.dart";
+export "src/request_method.dart";
