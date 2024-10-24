@@ -1,7 +1,9 @@
 name: dart_api_service
 description: A starting point for Dart libraries or applications.
 version: 1.0.0
-# repository: https://github.com/my_org/my_repo
+repository: https://github.com/Iconica-Development/dart_api_service
+
+publish_to: https://forgejo.internal.iconica.nl/api/packages/internal/pub/
 
 environment:
   sdk: ^3.3.3
@@ -9,6 +11,7 @@ environment:
 # Add regular dependencies here.
 dependencies:
   http: ^1.2.1
+  meta: ^1.14.0
 
 dev_dependencies:
   lints: ^3.0.0
@@ -17,3 +20,4 @@ dev_dependencies:
     git:
       url: https://github.com/Iconica-Development/flutter_iconica_analysis
       ref: 7.0.0
+  mocktail: ^1.0.3
