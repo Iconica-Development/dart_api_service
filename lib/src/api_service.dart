@@ -62,29 +62,29 @@ class HttpApiService<DefaultRepresentation extends Object> {
     var result = switch (method) {
       RequestMethod.delete => _client.delete(
           endpoint,
-          headers: headers,
+          headers: headersWithAuth,
           body: body,
           encoding: encoding,
         ),
       RequestMethod.get => _client.get(
           endpoint,
-          headers: headers,
+          headers: headersWithAuth,
         ),
       RequestMethod.patch => _client.patch(
           endpoint,
-          headers: headers,
+          headers: headersWithAuth,
           body: body,
           encoding: encoding,
         ),
       RequestMethod.post => _client.post(
           endpoint,
-          headers: headers,
+          headers: headersWithAuth,
           body: body,
           encoding: encoding,
         ),
       RequestMethod.put => _client.put(
           endpoint,
-          headers: headers,
+          headers: headersWithAuth,
           body: body,
           encoding: encoding,
         ),
@@ -316,6 +316,7 @@ class Endpoint<ResponseModel, RequestModel> {
       },
       body: body,
       encoding: encoding,
+      isAuthenticated: _authenticated,
     );
 
     if (response.statusCode >= 400) {
@@ -363,6 +364,10 @@ class ApiException implements Exception {
 
   /// The stacktrace of the error.
   final StackTrace? stackTrace;
+
+  @override
+  String toString() => "ApiException: ${inner.request?.url} -> $statusCode. "
+      "\ndetails: $error\n$stackTrace";
 }
 
 /// A response representation of the API call.
