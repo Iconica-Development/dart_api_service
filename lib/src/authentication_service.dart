@@ -62,7 +62,7 @@ class JWTAuthCredentials implements AuthCredentials {
 
   @override
   Map<String, String> get headers => {
-        "Authorization": "Bearer: $accessToken",
+        "Authorization": "Bearer $accessToken",
       };
 }
 
@@ -77,5 +77,5 @@ class TokenAuthCredentials implements AuthCredentials {
   final String token;
 
   @override
-  Map<String, String> get headers => {"Authorization": "Token $token"};
+  Map<String, String> get headers => {"Authorization": "Bearer $token"};
 }
