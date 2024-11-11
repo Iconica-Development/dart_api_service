@@ -1,3 +1,6 @@
+## 1.0.3
+- Fix query parameters never being provided to the actual request
+
 ## 1.0.2
 - Fix token auth to fit the bearer standard
 - Fix JWT auth by removing the `:` in the header

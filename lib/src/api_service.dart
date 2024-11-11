@@ -227,26 +227,27 @@ class Endpoint<ResponseModel, RequestModel> {
   /// Execute a GET request.
   Future<ApiResponse<ResponseModel>> get({
     Map<String, String>? headers,
-    Map<String, String>? queryParamers,
+    Map<String, String>? queryParameters,
     Encoding? encoding,
   }) async =>
       _request(
         requestMethod: RequestMethod.get,
         headers: headers,
-        queryParamers: queryParamers,
+        queryParameters: queryParameters,
         encoding: encoding,
       );
 
   /// Execute a DELETE request.
   Future<ApiResponse<ResponseModel>> delete({
     Map<String, String>? headers,
-    Map<String, String>? queryParamers,
+    Map<String, String>? queryParameters,
     RequestModel? requestModel,
     Encoding? encoding,
   }) async =>
       _request(
         requestMethod: RequestMethod.delete,
         headers: headers,
+        queryParameters: queryParameters,
         requestModel: requestModel,
         encoding: encoding,
       );
@@ -254,13 +255,14 @@ class Endpoint<ResponseModel, RequestModel> {
   /// Execute a PATCH request.
   Future<ApiResponse<ResponseModel>> patch({
     Map<String, String>? headers,
-    Map<String, String>? queryParamers,
+    Map<String, String>? queryParameters,
     RequestModel? requestModel,
     Encoding? encoding,
   }) async =>
       _request(
         requestMethod: RequestMethod.patch,
         headers: headers,
+        queryParameters: queryParameters,
         requestModel: requestModel,
         encoding: encoding,
       );
@@ -268,13 +270,14 @@ class Endpoint<ResponseModel, RequestModel> {
   /// Execute a POST request.
   Future<ApiResponse<ResponseModel>> post({
     Map<String, String>? headers,
-    Map<String, String>? queryParamers,
+    Map<String, String>? queryParameters,
     RequestModel? requestModel,
     Encoding? encoding,
   }) async =>
       _request(
         requestMethod: RequestMethod.post,
         headers: headers,
+        queryParameters:queryParameters,
         requestModel: requestModel,
         encoding: encoding,
       );
@@ -282,7 +285,7 @@ class Endpoint<ResponseModel, RequestModel> {
   /// Execute a PUT request.
   Future<ApiResponse<ResponseModel>> put({
     Map<String, String>? headers,
-    Map<String, String>? queryParamers,
+    Map<String, String>? queryParameters,
     RequestModel? requestModel,
     Encoding? encoding,
   }) async =>
@@ -290,17 +293,18 @@ class Endpoint<ResponseModel, RequestModel> {
         requestMethod: RequestMethod.put,
         headers: headers,
         requestModel: requestModel,
+        queryParameters:queryParameters,
         encoding: encoding,
       );
 
   Future<ApiResponse<ResponseModel>> _request({
     required RequestMethod requestMethod,
     Map<String, String>? headers,
-    Map<String, String>? queryParamers,
+    Map<String, String>? queryParameters,
     RequestModel? requestModel,
     Encoding? encoding,
   }) async {
-    var endpoint = _endpoint.replace(queryParameters: queryParamers ?? {});
+    var endpoint = _endpoint.replace(queryParameters: queryParameters ?? {});
 
     Object? body;
     if (requestModel != null) {
