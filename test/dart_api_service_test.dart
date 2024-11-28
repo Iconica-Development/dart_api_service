@@ -17,6 +17,62 @@ void main() {
       sut = HttpApiService(baseUrl: baseUrl, client: client);
     });
 
+    group("Should use proper headers when given through", () {
+      const testHeaders = {
+        "test": "value",
+      };
+
+      // ignore: discarded_futures
+      Future<Response> getDefinition() => client.post(
+            any<Uri>(),
+            headers: any(named: "headers", that: equals(testHeaders)),
+          );
+
+      setUp(() {
+        when(
+          getDefinition,
+        ).thenAnswer((invocation) async => Response("", 200));
+      });
+
+      test("request call", () async {
+        await sut.endpoint("/").post(headers: testHeaders);
+
+        verify(getDefinition).called(1);
+      });
+
+      test("endpoint headers", () async {
+        await sut.endpoint("/").addHeaders(testHeaders).post();
+
+        verify(getDefinition).called(1);
+      });
+
+      test("default headers", () async {
+        sut = HttpApiService(
+          baseUrl: baseUrl,
+          client: client,
+          defaultHeaders: testHeaders,
+        );
+
+        await sut.endpoint("/").post();
+
+        verify(getDefinition).called(1);
+      });
+
+      // testcase checking a bug that caused headers to be lost as soon as
+      // an endpoint converter was used.
+      test("default headers with a converter", () async {
+        sut = HttpApiService(
+          baseUrl: baseUrl,
+          client: client,
+          defaultHeaders: testHeaders,
+        );
+
+        await sut.endpoint("/").withConverter(const NonConverter()).post();
+
+        verify(getDefinition).called(1);
+      });
+    });
+
     group("Should use correct httpMethod when calling", () {
       test(
         "post",

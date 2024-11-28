@@ -76,6 +76,7 @@ class PostComment implements ApiSerializable {
 void main() async {
   var authService = MockAuthService();
   var apiService = HttpApiService(
+    defaultHeaders: {"Content-Type": "application/json"},
     baseUrl: Uri.parse("https://jsonplaceholder.typicode.com"),
     authenticationService: authService,
   );
@@ -98,6 +99,7 @@ void main() async {
   try {
     var post = await comments.get();
     print(post.result);
+    print(post.inner.request?.headers);
   } on ApiException catch (e) {
     print(e.statusCode);
     print(e.inner.body);

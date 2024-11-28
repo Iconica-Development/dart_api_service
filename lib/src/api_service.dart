@@ -209,6 +209,7 @@ class Endpoint<ResponseModel, RequestModel> {
         converter: converter,
         apiService: _apiService,
         authenticated: _authenticated,
+        defaultHeaders: _defaultHeaders,
       );
 
   /// Change the multiplicity of the endpoint
