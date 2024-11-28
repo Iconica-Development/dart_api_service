@@ -94,7 +94,7 @@ class HttpApiService<DefaultRepresentation extends Object> {
   }
 }
 
-/// An representation of an accessible web endpoint from which data
+/// A representation of an accessible web endpoint from which data
 /// can be retrieved
 class Endpoint<ResponseModel, RequestModel> {
   /// Mark this endpoint as needing authentication
@@ -277,7 +277,7 @@ class Endpoint<ResponseModel, RequestModel> {
       _request(
         requestMethod: RequestMethod.post,
         headers: headers,
-        queryParameters:queryParameters,
+        queryParameters: queryParameters,
         requestModel: requestModel,
         encoding: encoding,
       );
@@ -293,7 +293,7 @@ class Endpoint<ResponseModel, RequestModel> {
         requestMethod: RequestMethod.put,
         headers: headers,
         requestModel: requestModel,
-        queryParameters:queryParameters,
+        queryParameters: queryParameters,
         encoding: encoding,
       );
 
