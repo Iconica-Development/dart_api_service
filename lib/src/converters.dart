@@ -69,8 +69,10 @@ class MapJsonResponseConverter
         ApiConverter<JsonObject, JsonObject>,
         MultiplicitySupportedConverter<JsonObject, JsonObject> {
   @override
-  Map<String, dynamic> toRepresentation(Object object) =>
-      jsonDecode(object as String);
+  Map<String, dynamic> toRepresentation(Object object) {
+    if (object is! String || object.isEmpty) return {};
+    return jsonDecode(object);
+  }
 
   @override
   Object fromRepresentation(Map<String, dynamic> representation) =>
