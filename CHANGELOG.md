@@ -1,3 +1,8 @@
+## 1.0.4
+- Fix headers not being copied with changing the converter for an endpoint
+- Update formatting
+- Add support for empty bodies in jsonresponse converter
+
 ## 1.0.3
 - Fix query parameters never being provided to the actual request
 
