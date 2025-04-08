@@ -1,3 +1,6 @@
+## 1.1.0
+- Added option to provide a list as query parameter.
+
 ## 1.0.4
 - Fix headers not being copied with changing the converter for an endpoint
 - Update formatting
