@@ -228,7 +228,7 @@ class Endpoint<ResponseModel, RequestModel> {
   /// Execute a GET request.
   Future<ApiResponse<ResponseModel>> get({
     Map<String, String>? headers,
-    Map<String, String>? queryParameters,
+    Map<String, dynamic /*String?|Iterable<String>*/ >? queryParameters,
     Encoding? encoding,
   }) async =>
       _request(
@@ -241,7 +241,7 @@ class Endpoint<ResponseModel, RequestModel> {
   /// Execute a DELETE request.
   Future<ApiResponse<ResponseModel>> delete({
     Map<String, String>? headers,
-    Map<String, String>? queryParameters,
+    Map<String, dynamic /*String?|Iterable<String>*/ >? queryParameters,
     RequestModel? requestModel,
     Encoding? encoding,
   }) async =>
@@ -256,7 +256,7 @@ class Endpoint<ResponseModel, RequestModel> {
   /// Execute a PATCH request.
   Future<ApiResponse<ResponseModel>> patch({
     Map<String, String>? headers,
-    Map<String, String>? queryParameters,
+    Map<String, dynamic /*String?|Iterable<String>*/ >? queryParameters,
     RequestModel? requestModel,
     Encoding? encoding,
   }) async =>
@@ -271,7 +271,7 @@ class Endpoint<ResponseModel, RequestModel> {
   /// Execute a POST request.
   Future<ApiResponse<ResponseModel>> post({
     Map<String, String>? headers,
-    Map<String, String>? queryParameters,
+    Map<String, dynamic /*String?|Iterable<String>*/ >? queryParameters,
     RequestModel? requestModel,
     Encoding? encoding,
   }) async =>
@@ -286,7 +286,7 @@ class Endpoint<ResponseModel, RequestModel> {
   /// Execute a PUT request.
   Future<ApiResponse<ResponseModel>> put({
     Map<String, String>? headers,
-    Map<String, String>? queryParameters,
+    Map<String, dynamic /*String?|Iterable<String>*/ >? queryParameters,
     RequestModel? requestModel,
     Encoding? encoding,
   }) async =>
@@ -301,7 +301,7 @@ class Endpoint<ResponseModel, RequestModel> {
   Future<ApiResponse<ResponseModel>> _request({
     required RequestMethod requestMethod,
     Map<String, String>? headers,
-    Map<String, String>? queryParameters,
+    Map<String, dynamic /*String?|Iterable<String>*/ >? queryParameters,
     RequestModel? requestModel,
     Encoding? encoding,
   }) async {
