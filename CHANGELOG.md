@@ -1,3 +1,6 @@
+## 1.1.1
+- Change meta package to any instead of specific version.
+
 ## 1.1.0
 - Added option to provide a list as query parameter.
 

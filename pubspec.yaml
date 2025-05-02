@@ -1,6 +1,6 @@
 name: dart_api_service
 description: A starting point for Dart libraries or applications.
-version: 1.1.0
+version: 1.1.1
 repository: https://github.com/Iconica-Development/dart_api_service
 
 publish_to: https://forgejo.internal.iconica.nl/api/packages/internal/pub/
@@ -11,7 +11,7 @@ environment:
 # Add regular dependencies here.
 dependencies:
   http: ^1.2.1
-  meta: ^1.14.0
+  meta: any
 
 dev_dependencies:
   lints: ^3.0.0
