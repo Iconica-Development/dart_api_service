@@ -9,13 +9,12 @@ A simple API service that follows a FirebaseFirestore-like definition of resourc
 
 ## Getting started
 
-To use the this API service in your Dart or Flutter, add the following to the pubspec
+To use the this API service in your Dart or Flutter, add the following to the pubspec.yaml
 
 ```yaml
-  flutter_start:
-    git:
-      url: https://github.com/Iconica-Development/dart_api_service
-      ref: <Version>
+  dart_api_service:
+    hosted: https://forgejo.internal.iconica.nl/api/packages/internal/pub/
+    version: <Version>
 ```
 
 ## Usage
