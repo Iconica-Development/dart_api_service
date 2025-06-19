@@ -68,6 +68,9 @@ class MapJsonResponseConverter
     implements
         ApiConverter<JsonObject, JsonObject>,
         MultiplicitySupportedConverter<JsonObject, JsonObject> {
+  /// Creates a MapJsonResponseConverter.
+  const MapJsonResponseConverter();
+
   @override
   Map<String, dynamic> toRepresentation(Object object) {
     if (object is! String || object.isEmpty) return {};
@@ -80,7 +83,7 @@ class MapJsonResponseConverter
 
   @override
   ApiConverter<List<JsonObject>, List<JsonObject>> list() =>
-      ListMapJsonResponseConverter();
+      const ListMapJsonResponseConverter();
 
   @override
   ApiConverter<JsonObject, JsonObject> single() => this;
@@ -94,6 +97,9 @@ class ListMapJsonResponseConverter
     implements
         ApiConverter<ListMapJsonResponse, ListMapJsonResponse>,
         MultiplicitySupportedConverter<JsonObject, JsonObject> {
+  /// Creates a ListMapJsonResponseConverter.
+  const ListMapJsonResponseConverter();
+
   @override
   Object fromRepresentation(ListMapJsonResponse representation) =>
       jsonEncode(representation);
@@ -114,7 +120,8 @@ class ListMapJsonResponseConverter
   ApiConverter<List<JsonObject>, List<JsonObject>> list() => this;
 
   @override
-  ApiConverter<JsonObject, JsonObject> single() => MapJsonResponseConverter();
+  ApiConverter<JsonObject, JsonObject> single() =>
+      const MapJsonResponseConverter();
 }
 
 /// A serializer made to support custom models to and from json mappings.
@@ -129,7 +136,8 @@ class ModelJsonResponseConverter<ResponseModel, RequestModel>
   })  : _serialize = serialize,
         _deserialize = deserialize;
 
-  final MapJsonResponseConverter _jsonConverter = MapJsonResponseConverter();
+  final MapJsonResponseConverter _jsonConverter =
+      const MapJsonResponseConverter();
   final ResponseModel Function(Map<String, dynamic>) _deserialize;
   final Map<String, dynamic> Function(RequestModel) _serialize;
 
@@ -165,7 +173,7 @@ class ModelListJsonResponseConverter<ResponseModel, RequestModel>
         _deserialize = deserialize;
 
   final ListMapJsonResponseConverter _jsonConverter =
-      ListMapJsonResponseConverter();
+      const ListMapJsonResponseConverter();
   final ResponseModel Function(Map<String, dynamic>) _deserialize;
   final Map<String, dynamic> Function(RequestModel) _serialize;
 
