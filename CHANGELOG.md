@@ -1,3 +1,6 @@
+## 1.1.2
+- Added export for `package:http/http.dart` so Client can be imported directly by users of this package.
+
 ## 1.1.1
 - Change meta package to any instead of specific version.
 

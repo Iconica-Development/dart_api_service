@@ -1,5 +1,4 @@
 import "package:dart_api_service/dart_api_service.dart";
-import "package:http/http.dart";
 import "package:mocktail/mocktail.dart";
 import "package:test/test.dart";
 
