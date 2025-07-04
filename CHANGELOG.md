@@ -1,3 +1,6 @@
+## 1.1.3
+- Allow access to the baseUrl, client and authenticationService properties.
+
 ## 1.1.2
 - Added export for `package:http/http.dart` so Client can be imported directly by users of this package.
 

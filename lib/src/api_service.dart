@@ -9,8 +9,7 @@ class HttpApiService<DefaultRepresentation extends Object> {
   /// Create the HttpApiService
   HttpApiService({
     required Uri baseUrl,
-    AuthenticationService<AuthCredentials> authenticationService =
-        const EmptyAuthService(),
+    this.authenticationService = const EmptyAuthService(),
     ApiConverter<DefaultRepresentation, DefaultRepresentation>?
         apiResponseConverter,
     Map<String, String> defaultHeaders = const {},
@@ -18,16 +17,23 @@ class HttpApiService<DefaultRepresentation extends Object> {
   })  : _defaultHeaders = defaultHeaders,
         _apiResponseConverter =
             apiResponseConverter ?? NonConverter<DefaultRepresentation>(),
-        _authenticationService = authenticationService,
         _baseUrl = baseUrl,
         _client = client ?? http.Client();
 
   final ApiConverter<DefaultRepresentation, DefaultRepresentation>
       _apiResponseConverter;
   final Uri _baseUrl;
-  final AuthenticationService _authenticationService;
+
+  /// The authentication service used to retrieve credentials.
+  final AuthenticationService authenticationService;
   final Map<String, String> _defaultHeaders;
   final http.Client _client;
+
+  /// The base URL of the API service.
+  Uri get baseUrl => _baseUrl;
+
+  /// The HTTP client used to make requests.
+  http.Client get client => _client;
 
   /// Create a callable endpoint.
   ///
@@ -52,7 +58,7 @@ class HttpApiService<DefaultRepresentation extends Object> {
   }) async {
     var headersWithAuth = headers ?? {};
     if (isAuthenticated) {
-      var credentials = await _authenticationService.getCredentials();
+      var credentials = await authenticationService.getCredentials();
       headersWithAuth = {
         ...headersWithAuth,
         ...credentials.headers,
