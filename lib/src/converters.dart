@@ -124,6 +124,27 @@ class ListMapJsonResponseConverter
       const MapJsonResponseConverter();
 }
 
+/// A simple converter that parses a JSON string into a Map.
+/// This is ideal for handling simple JSON object responses.
+class JsonMapResponseConverter
+    implements ApiConverter<Map<String, dynamic>, void> {
+  /// Creates an instance of [JsonMapResponseConverter].
+  const JsonMapResponseConverter();
+
+  @override
+  Map<String, dynamic> toRepresentation(Object? input) {
+    if (input is String && input.isNotEmpty) {
+      return jsonDecode(input) as Map<String, dynamic>;
+    }
+    return {};
+  }
+
+  @override
+  Object fromRepresentation(void representation) {
+    throw UnimplementedError();
+  }
+}
+
 /// A serializer made to support custom models to and from json mappings.
 class ModelJsonResponseConverter<ResponseModel, RequestModel>
     implements

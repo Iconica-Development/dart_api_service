@@ -98,6 +98,35 @@ class HttpApiService<DefaultRepresentation extends Object> {
 
     return result;
   }
+
+  Future<http.Response> _upload({
+    required Uri endpoint,
+    required String fieldName,
+    required List<int> fileBytes,
+    required String fileName,
+    Map<String, String>? headers,
+    bool isAuthenticated = false,
+  }) async {
+    var request = http.MultipartRequest("POST", endpoint);
+    var allHeaders = headers ?? {};
+
+    if (isAuthenticated) {
+      var credentials = await authenticationService.getCredentials();
+      allHeaders.addAll(credentials.headers);
+    }
+    request.headers.addAll(allHeaders);
+
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        fieldName,
+        fileBytes,
+        filename: fileName,
+      ),
+    );
+
+    var streamedResponse = await _client.send(request);
+    return http.Response.fromStream(streamedResponse);
+  }
 }
 
 /// A representation of an accessible web endpoint from which data
@@ -127,6 +156,35 @@ class Endpoint<ResponseModel, RequestModel> {
 
   /// get the currently set path.
   String get path => _endpoint.path;
+
+  /// Executes a multipart POST request for file uploading.
+  /// This method is used to upload files to the server.
+  Future<ApiResponse<ResponseModel>> upload({
+    required String fieldName,
+    required List<int> fileBytes,
+    required String fileName,
+    Map<String, String>? headers,
+  }) async {
+    var response = await _apiService._upload(
+      endpoint: _endpoint,
+      fieldName: fieldName,
+      fileBytes: fileBytes,
+      fileName: fileName,
+      headers: {..._defaultHeaders, ...?headers},
+      isAuthenticated: _authenticated,
+    );
+
+    if (response.statusCode >= 400) {
+      throw ApiException(inner: response);
+    }
+
+    try {
+      var converted = _converter.toRepresentation(response.body);
+      return ApiResponse(inner: response, result: converted);
+    } on Exception catch (e, s) {
+      throw ApiException(inner: response, error: e, stackTrace: s);
+    }
+  }
 
   /// Created a new endpoint from this endpoint.
   Endpoint<ResponseModel, RequestModel> child(String path) {
@@ -355,7 +413,7 @@ class Endpoint<ResponseModel, RequestModel> {
 /// Exception that's thrown when the Api call resulted in an exception
 class ApiException implements Exception {
   /// Creates an API Exception
-  ApiException({
+  const ApiException({
     required this.inner,
     this.error,
     this.stackTrace,
@@ -385,7 +443,7 @@ class ApiException implements Exception {
 class ApiResponse<Model> {
   /// Create an API response
   @visibleForTesting
-  ApiResponse({
+  const ApiResponse({
     required this.inner,
     this.result,
   });

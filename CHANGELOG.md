@@ -1,3 +1,6 @@
+## 1.2.0
+- Added support for multipart file uploads.
+
 ## 1.1.3
 - Allow access to the baseUrl, client and authenticationService properties.
 
