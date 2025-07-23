@@ -104,10 +104,12 @@ class HttpApiService<DefaultRepresentation extends Object> {
     required String fieldName,
     required List<int> fileBytes,
     required String fileName,
+    required RequestMethod method,
+    Map<String, String>? fields,
     Map<String, String>? headers,
     bool isAuthenticated = false,
   }) async {
-    var request = http.MultipartRequest("POST", endpoint);
+    var request = http.MultipartRequest(method.name.toUpperCase(), endpoint);
     var allHeaders = headers ?? {};
 
     if (isAuthenticated) {
@@ -115,6 +117,10 @@ class HttpApiService<DefaultRepresentation extends Object> {
       allHeaders.addAll(credentials.headers);
     }
     request.headers.addAll(allHeaders);
+
+    if (fields != null) {
+      request.fields.addAll(fields);
+    }
 
     request.files.add(
       http.MultipartFile.fromBytes(
@@ -163,6 +169,8 @@ class Endpoint<ResponseModel, RequestModel> {
     required String fieldName,
     required List<int> fileBytes,
     required String fileName,
+    RequestMethod method = RequestMethod.post,
+    Map<String, String>? fields,
     Map<String, String>? headers,
   }) async {
     var response = await _apiService._upload(
@@ -170,6 +178,8 @@ class Endpoint<ResponseModel, RequestModel> {
       fieldName: fieldName,
       fileBytes: fileBytes,
       fileName: fileName,
+      method: method,
+      fields: fields,
       headers: {..._defaultHeaders, ...?headers},
       isAuthenticated: _authenticated,
     );

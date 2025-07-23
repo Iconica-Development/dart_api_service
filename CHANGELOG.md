@@ -1,3 +1,6 @@
+## 1.2.1
+- Added field and request method option for the multipart file upload
+
 ## 1.2.0
 - Added support for multipart file uploads.
 
