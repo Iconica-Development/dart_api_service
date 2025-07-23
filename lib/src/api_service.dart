@@ -56,47 +56,61 @@ class HttpApiService<DefaultRepresentation extends Object> {
     Encoding? encoding,
     bool isAuthenticated = false,
   }) async {
-    var headersWithAuth = headers ?? {};
-    if (isAuthenticated) {
-      var credentials = await authenticationService.getCredentials();
-      headersWithAuth = {
-        ...headersWithAuth,
-        ...credentials.headers,
+    Future<http.Response> makeRequest() async {
+      var headersWithAuth = headers ?? {};
+      if (isAuthenticated) {
+        var credentials = await authenticationService.getCredentials();
+        headersWithAuth = {
+          ...headersWithAuth,
+          ...credentials.headers,
+        };
+      }
+
+      return switch (method) {
+        RequestMethod.delete => _client.delete(
+            endpoint,
+            headers: headersWithAuth,
+            body: body,
+            encoding: encoding,
+          ),
+        RequestMethod.get => _client.get(
+            endpoint,
+            headers: headersWithAuth,
+          ),
+        RequestMethod.patch => _client.patch(
+            endpoint,
+            headers: headersWithAuth,
+            body: body,
+            encoding: encoding,
+          ),
+        RequestMethod.post => _client.post(
+            endpoint,
+            headers: headersWithAuth,
+            body: body,
+            encoding: encoding,
+          ),
+        RequestMethod.put => _client.put(
+            endpoint,
+            headers: headersWithAuth,
+            body: body,
+            encoding: encoding,
+          ),
       };
     }
 
-    var result = switch (method) {
-      RequestMethod.delete => _client.delete(
-          endpoint,
-          headers: headersWithAuth,
-          body: body,
-          encoding: encoding,
-        ),
-      RequestMethod.get => _client.get(
-          endpoint,
-          headers: headersWithAuth,
-        ),
-      RequestMethod.patch => _client.patch(
-          endpoint,
-          headers: headersWithAuth,
-          body: body,
-          encoding: encoding,
-        ),
-      RequestMethod.post => _client.post(
-          endpoint,
-          headers: headersWithAuth,
-          body: body,
-          encoding: encoding,
-        ),
-      RequestMethod.put => _client.put(
-          endpoint,
-          headers: headersWithAuth,
-          body: body,
-          encoding: encoding,
-        ),
-    };
+    var response = await makeRequest();
 
-    return result;
+    if (response.statusCode == 401 && isAuthenticated) {
+      try {
+        await authenticationService.refreshCredentials();
+
+        response = await makeRequest();
+      } on Exception {
+        return response;
+      }
+    }
+
+    return response;
   }
 
   Future<http.Response> _upload({
