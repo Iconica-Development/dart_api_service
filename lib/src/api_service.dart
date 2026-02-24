@@ -317,12 +317,14 @@ class Endpoint<ResponseModel, RequestModel> {
   Future<ApiResponse<ResponseModel>> get({
     Map<String, String>? headers,
     Map<String, dynamic /*String?|Iterable<String>*/ >? queryParameters,
+    RequestModel? requestModel,
     Encoding? encoding,
   }) async =>
       _request(
         requestMethod: RequestMethod.get,
         headers: headers,
         queryParameters: queryParameters,
+        requestModel: requestModel,
         encoding: encoding,
       );
 
