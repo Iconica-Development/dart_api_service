@@ -1,3 +1,6 @@
+## 1.2.2
+- Added requestModel parameter to GET request
+
 ## 1.2.1
 - Added field and request method option for the multipart file upload
 - Added automatic retry on 401 Unauthorized errors after refreshing credentials
