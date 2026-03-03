@@ -74,6 +74,7 @@ class BasicAuthCredentials implements AuthCredentials {
 
   /// The username used for basic authentication
   final String username;
+
   /// The password used for basic authentication
   final String password;
 

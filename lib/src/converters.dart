@@ -220,3 +220,71 @@ class ModelListJsonResponseConverter<ResponseModel, RequestModel>
         serialize: _serialize,
       );
 }
+
+/// A converter that only supports serialization,
+/// ideal for write only endpoints
+class WriteOnlyJsonMapResponseConverter
+    implements ApiConverter<void, Map<String, dynamic>> {
+  /// Creates a WriteOnlyJsonMapResponseConverter.
+  const WriteOnlyJsonMapResponseConverter();
+
+  @override
+  Object fromRepresentation(Map<String, dynamic> representation) =>
+      jsonEncode(representation);
+
+  @override
+  void toRepresentation(_) {}
+}
+
+/// A converter that only supports deserialization,
+/// ideal for read only endpoints
+class ReadOnlyJsonMapResponseConverter
+    implements ApiConverter<Map<String, dynamic>, void> {
+  /// Creates a ReadOnlyJsonMapResponseConverter.
+  const ReadOnlyJsonMapResponseConverter();
+
+  @override
+  Object fromRepresentation(_) => "";
+
+  @override
+  Map<String, dynamic> toRepresentation(Object object) =>
+      jsonDecode(object as String) as Map<String, dynamic>;
+}
+
+/// A converter that only supports serialization,
+/// ideal for write only endpoints
+class WriteOnlyModelJsonResponseConverter<RequestModel>
+    implements ApiConverter<void, RequestModel> {
+  /// Creates a write only json serializer.
+  WriteOnlyModelJsonResponseConverter({
+    required Map<String, dynamic> Function(RequestModel) serialize,
+  }) : _serialize = serialize;
+
+  final Map<String, dynamic> Function(RequestModel) _serialize;
+
+  @override
+  Object fromRepresentation(RequestModel representation) =>
+      jsonEncode(_serialize(representation));
+
+  @override
+  void toRepresentation(_) {}
+}
+
+/// A converter that only supports deserialization,
+/// ideal for read only endpoints
+class ReadOnlyModelJsonResponseConverter<ResponseModel>
+    implements ApiConverter<ResponseModel, void> {
+  /// Creates a read only json serializer.
+  ReadOnlyModelJsonResponseConverter({
+    required ResponseModel Function(Map<String, dynamic>) deserialize,
+  }) : _deserialize = deserialize;
+
+  final ResponseModel Function(Map<String, dynamic>) _deserialize;
+
+  @override
+  Object fromRepresentation(_) => "";
+
+  @override
+  ResponseModel toRepresentation(Object object) =>
+      _deserialize(jsonDecode(object as String));
+}
