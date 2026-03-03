@@ -1,4 +1,5 @@
 import "dart:async";
+import "dart:convert";
 
 /// A service that allows the api service to obtain AuthenticationInformation
 abstract class AuthenticationService<T extends AuthCredentials> {
@@ -64,6 +65,25 @@ class JWTAuthCredentials implements AuthCredentials {
   Map<String, String> get headers => {
         "Authorization": "Bearer $accessToken",
       };
+}
+
+/// A representation of a basic authentication
+class BasicAuthCredentials implements AuthCredentials {
+  /// Creates a basic auth credential.
+  BasicAuthCredentials({required this.username, required this.password});
+
+  /// The username used for basic authentication
+  final String username;
+  /// The password used for basic authentication
+  final String password;
+
+  @override
+  Map<String, String> get headers {
+    var accessToken = base64Encode(utf8.encode("$username:$password"));
+    return {
+      "Authorization": "Basic $accessToken",
+    };
+  }
 }
 
 /// A representation of a token authentication
