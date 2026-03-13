@@ -1,3 +1,10 @@
+## 1.2.4
+- Added default query parameters to all calls
+
+## 1.2.3
+- Added asymetric api response converters
+- Added basic auth
+
 ## 1.2.2
 - Added requestModel parameter to GET request
 
