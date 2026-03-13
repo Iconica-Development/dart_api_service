@@ -13,8 +13,10 @@ class HttpApiService<DefaultRepresentation extends Object> {
     ApiConverter<DefaultRepresentation, DefaultRepresentation>?
         apiResponseConverter,
     Map<String, String> defaultHeaders = const {},
+    Map<String, String> defaultQueryParameters = const {},
     http.Client? client,
   })  : _defaultHeaders = defaultHeaders,
+        _defaultQueryParameters = defaultQueryParameters,
         _apiResponseConverter =
             apiResponseConverter ?? NonConverter<DefaultRepresentation>(),
         _baseUrl = baseUrl,
@@ -27,6 +29,7 @@ class HttpApiService<DefaultRepresentation extends Object> {
   /// The authentication service used to retrieve credentials.
   final AuthenticationService authenticationService;
   final Map<String, String> _defaultHeaders;
+  final Map<String, String> _defaultQueryParameters;
   final http.Client _client;
 
   /// The base URL of the API service.
@@ -43,6 +46,7 @@ class HttpApiService<DefaultRepresentation extends Object> {
   ) =>
       Endpoint._(
         endpoint: _baseUrl.replace(path: path),
+        defaultQueryParameter: _defaultQueryParameters,
         converter: _apiResponseConverter,
         apiService: this,
         defaultHeaders: _defaultHeaders,
@@ -121,10 +125,17 @@ class HttpApiService<DefaultRepresentation extends Object> {
     required RequestMethod method,
     Map<String, String>? fields,
     Map<String, String>? headers,
+    Map<String, String>? queryParameters,
     bool isAuthenticated = false,
   }) async {
+    endpoint = endpoint.replace(
+      queryParameters: {
+        ..._defaultQueryParameters,
+        ...?queryParameters,
+      },
+    );
     var request = http.MultipartRequest(method.name.toUpperCase(), endpoint);
-    var allHeaders = headers ?? {};
+    var allHeaders = {...?headers};
 
     if (isAuthenticated) {
       var credentials = await authenticationService.getCredentials();
@@ -161,8 +172,10 @@ class Endpoint<ResponseModel, RequestModel> {
     required ApiConverter<ResponseModel, RequestModel> converter,
     required HttpApiService apiService,
     Map<String, String> defaultHeaders = const {},
+    Map<String, String> defaultQueryParameter = const {},
     bool authenticated = false,
   })  : _defaultHeaders = defaultHeaders,
+        _defaultQueryParameters = defaultQueryParameter,
         _converter = converter,
         _authenticated = authenticated,
         _apiService = apiService,
@@ -172,6 +185,7 @@ class Endpoint<ResponseModel, RequestModel> {
   final HttpApiService _apiService;
   final bool _authenticated;
   final Map<String, String> _defaultHeaders;
+  final Map<String, String> _defaultQueryParameters;
   final ApiConverter<ResponseModel, RequestModel> _converter;
 
   /// get the currently set path.
@@ -186,6 +200,7 @@ class Endpoint<ResponseModel, RequestModel> {
     RequestMethod method = RequestMethod.post,
     Map<String, String>? fields,
     Map<String, String>? headers,
+    Map<String, String>? queryParameters,
   }) async {
     var response = await _apiService._upload(
       endpoint: _endpoint,
@@ -195,6 +210,7 @@ class Endpoint<ResponseModel, RequestModel> {
       method: method,
       fields: fields,
       headers: {..._defaultHeaders, ...?headers},
+      queryParameters: {..._defaultQueryParameters, ...?queryParameters},
       isAuthenticated: _authenticated,
     );
 
@@ -219,12 +235,13 @@ class Endpoint<ResponseModel, RequestModel> {
       apiService: _apiService,
       authenticated: _authenticated,
       defaultHeaders: _defaultHeaders,
+      defaultQueryParameter: _defaultQueryParameters,
     );
   }
 
   /// Add to the existing default headers.
   ///
-  /// This does overwrite existing headers of the same name.
+  /// This does override existing headers of the same name.
   Endpoint<ResponseModel, RequestModel> addHeaders(
     Map<String, String> headers,
   ) =>
@@ -243,6 +260,31 @@ class Endpoint<ResponseModel, RequestModel> {
         apiService: _apiService,
         authenticated: _authenticated,
         defaultHeaders: headers,
+        defaultQueryParameter: _defaultQueryParameters,
+      );
+
+  /// Add to existing default query parameters
+  ///
+  /// This does override existing query parameters of the same name.
+  Endpoint<ResponseModel, RequestModel> addDefaultQueryParameters(
+    Map<String, String> queryParameters,
+  ) =>
+      setDefaultQueryParameters({
+        ..._defaultQueryParameters,
+        ...queryParameters,
+      });
+
+  /// Set the default query parameters
+  Endpoint<ResponseModel, RequestModel> setDefaultQueryParameters(
+    Map<String, String> queryParameters,
+  ) =>
+      Endpoint._(
+        endpoint: _endpoint,
+        converter: _converter,
+        apiService: _apiService,
+        authenticated: _authenticated,
+        defaultHeaders: _defaultQueryParameters,
+        defaultQueryParameter: queryParameters,
       );
 
   /// Binds variables to paths.
@@ -276,6 +318,7 @@ class Endpoint<ResponseModel, RequestModel> {
       apiService: _apiService,
       authenticated: _authenticated,
       defaultHeaders: _defaultHeaders,
+      defaultQueryParameter: _defaultQueryParameters,
     );
   }
 
@@ -286,6 +329,7 @@ class Endpoint<ResponseModel, RequestModel> {
         converter: _converter,
         authenticated: true,
         defaultHeaders: _defaultHeaders,
+        defaultQueryParameter: _defaultQueryParameters,
       );
 
   /// Add a response converter to more easily handle response conversion
@@ -298,6 +342,7 @@ class Endpoint<ResponseModel, RequestModel> {
         apiService: _apiService,
         authenticated: _authenticated,
         defaultHeaders: _defaultHeaders,
+        defaultQueryParameter: _defaultQueryParameters,
       );
 
   /// Change the multiplicity of the endpoint
@@ -395,7 +440,12 @@ class Endpoint<ResponseModel, RequestModel> {
     RequestModel? requestModel,
     Encoding? encoding,
   }) async {
-    var endpoint = _endpoint.replace(queryParameters: queryParameters ?? {});
+    var endpoint = _endpoint.replace(
+      queryParameters: {
+        ..._defaultQueryParameters,
+        ...?queryParameters,
+      },
+    );
 
     Object? body;
     if (requestModel != null) {
