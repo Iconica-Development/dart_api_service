@@ -30,13 +30,13 @@ void main() {
       });
 
       test("request call", () async {
-        await sut.endpoint("/").post(headers: testHeaders);
+        await sut.endpoint("/").post(headers: testHeaders).run();
 
         verify(getDefinition).called(1);
       });
 
       test("endpoint headers", () async {
-        await sut.endpoint("/").addHeaders(testHeaders).post();
+        await sut.endpoint("/").addHeaders(testHeaders).post().run();
 
         verify(getDefinition).called(1);
       });
@@ -48,7 +48,7 @@ void main() {
           defaultHeaders: testHeaders,
         );
 
-        await sut.endpoint("/").post();
+        await sut.endpoint("/").post().run();
 
         verify(getDefinition).called(1);
       });
@@ -62,7 +62,11 @@ void main() {
           defaultHeaders: testHeaders,
         );
 
-        await sut.endpoint("/").withConverter(const NonConverter()).post();
+        await sut
+            .endpoint("/")
+            .withConverter(const NonConverter())
+            .post()
+            .run();
 
         verify(getDefinition).called(1);
       });
@@ -81,9 +85,9 @@ void main() {
 
         when(postDefinition).thenAnswer((invocation) async => expected);
 
-        final response = await sut.endpoint("/").post();
+        final response = await sut.endpoint("/").post().run();
 
-        expect(response.inner, equals(expected));
+        expect(response.toNullable()?.inner, equals(expected));
 
         verify(postDefinition).called(1);
       });
@@ -96,9 +100,9 @@ void main() {
 
         when(getDefinition).thenAnswer((invocation) async => expected);
 
-        final response = await sut.endpoint("/").get();
+        final response = await sut.endpoint("/").get().run();
 
-        expect(response.inner, equals(expected));
+        expect(response.toNullable()?.inner, equals(expected));
 
         verify(getDefinition).called(1);
       });
@@ -115,9 +119,9 @@ void main() {
 
         when(deleteDefinition).thenAnswer((invocation) async => expected);
 
-        final response = await sut.endpoint("/").delete();
+        final response = await sut.endpoint("/").delete().run();
 
-        expect(response.inner, equals(expected));
+        expect(response.toNullable()?.inner, equals(expected));
 
         verify(deleteDefinition).called(1);
       });
@@ -134,9 +138,9 @@ void main() {
 
         when(patchDefinition).thenAnswer((invocation) async => expected);
 
-        final response = await sut.endpoint("/").patch();
+        final response = await sut.endpoint("/").patch().run();
 
-        expect(response.inner, equals(expected));
+        expect(response.toNullable()?.inner, equals(expected));
 
         verify(patchDefinition).called(1);
       });
@@ -153,9 +157,9 @@ void main() {
 
         when(putDefinition).thenAnswer((invocation) async => expected);
 
-        final response = await sut.endpoint("/").put();
+        final response = await sut.endpoint("/").put().run();
 
-        expect(response.inner, equals(expected));
+        expect(response.toNullable()?.inner, equals(expected));
 
         verify(putDefinition).called(1);
       });

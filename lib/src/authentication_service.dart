@@ -1,5 +1,6 @@
-import "dart:async";
 import "dart:convert";
+
+import "package:fpdart/fpdart.dart";
 
 /// A service that allows the api service to obtain AuthenticationInformation
 abstract class AuthenticationService<T extends AuthCredentials> {
@@ -7,14 +8,15 @@ abstract class AuthenticationService<T extends AuthCredentials> {
   const AuthenticationService();
 
   /// Returns the current credentials
-  FutureOr<T> getCredentials();
+  TaskEither<CredentialRetrievalFailedException, T> getCredentials();
 
   /// Refreshes the credentials.
   ///
   /// If you want to apply custom refresh logic
   /// you can override this function. By default it will try to retrieve the
   /// credentials without any refresh information.
-  FutureOr<T> refreshCredentials() => getCredentials();
+  TaskEither<CredentialRetrievalFailedException, T> refreshCredentials() =>
+      getCredentials();
 }
 
 /// A generic interface to define AuthCredentials;
@@ -28,7 +30,8 @@ class EmptyAuthService extends AuthenticationService<EmptyAuth> {
   /// creates an empty auth service
   const EmptyAuthService();
   @override
-  FutureOr<EmptyAuth> getCredentials() => EmptyAuth();
+  TaskEither<CredentialRetrievalFailedException, EmptyAuth> getCredentials() =>
+      .of(EmptyAuth());
 }
 
 /// Default no auth credentials if none are provided
@@ -93,4 +96,10 @@ class TokenAuthCredentials implements AuthCredentials {
 
   @override
   Map<String, String> get headers => {"Authorization": "Bearer $token"};
+}
+
+/// Exception base class to be thrown for implementing the auth service
+abstract class const CredentialRetrievalFailedException() {
+  /// Exception base class to be thrown for implementing the auth service
+  this;
 }

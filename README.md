@@ -44,12 +44,16 @@ to `/example` folder.
     "post": 1,
   });
 
-  try {
-    var post = await comments.get();
-    print(post.result);
-  } on ApiException catch (e) {
-    print(e.statusCode);
-    print(e.inner.body);
+  // Requests return a TaskEither; nothing runs until `.run()` is called.
+  final result = await comments.get().run();
+  switch (result) {
+    case Right(value: final post):
+      print(post.result);
+    case Left(value: final ApiResponseException e):
+      print(e.statusCode);
+      print(e.inner.body);
+    case Left(value: final e):
+      print(e);
   }
 ```
 

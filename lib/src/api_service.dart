@@ -1,6 +1,8 @@
 import "dart:convert";
+import "dart:io";
 
 import "package:dart_api_service/dart_api_service.dart";
+import "package:fpdart/fpdart.dart";
 import "package:http/http.dart" as http;
 import "package:meta/meta.dart";
 
@@ -48,66 +50,93 @@ class HttpApiService<DefaultRepresentation extends Object> {
     defaultHeaders: _defaultHeaders,
   );
 
-  Future<http.Response> _request(
+  TaskEither<ApiException, http.Response> _request(
     Uri endpoint,
     RequestMethod method, {
     Map<String, String>? headers,
     Object? body,
     Encoding? encoding,
     bool isAuthenticated = false,
-  }) async {
-    Future<http.Response> makeRequest() async {
+  }) => .Do(($) async {
+    TaskEither<ApiException, http.Response> makeRequest() => .Do(($) async {
       var headersWithAuth = headers ?? {};
       if (isAuthenticated) {
-        final credentials = await authenticationService.getCredentials();
+        final credentials = await $(
+          _credentials(authenticationService.getCredentials),
+        );
         headersWithAuth = {...headersWithAuth, ...credentials.headers};
       }
 
+      Future<http.Response> wrapHttpCall(
+        Future<http.Response> Function() callable,
+      ) => $(
+        .tryCatch(callable, (error, _) {
+          if (error is SocketException) {
+            return const ApiConnectionFailureException();
+          }
+          return const ApiCallFailedException();
+        }),
+      );
+
       return switch (method) {
-        RequestMethod.delete => _client.delete(
-          endpoint,
-          headers: headersWithAuth,
-          body: body,
-          encoding: encoding,
+        RequestMethod.delete => wrapHttpCall(
+          () => _client.delete(
+            endpoint,
+            headers: headersWithAuth,
+            body: body,
+            encoding: encoding,
+          ),
         ),
-        RequestMethod.get => _client.get(endpoint, headers: headersWithAuth),
-        RequestMethod.patch => _client.patch(
-          endpoint,
-          headers: headersWithAuth,
-          body: body,
-          encoding: encoding,
+        RequestMethod.get => wrapHttpCall(
+          () => _client.get(endpoint, headers: headersWithAuth),
         ),
-        RequestMethod.post => _client.post(
-          endpoint,
-          headers: headersWithAuth,
-          body: body,
-          encoding: encoding,
+        RequestMethod.patch => wrapHttpCall(
+          () => _client.patch(
+            endpoint,
+            headers: headersWithAuth,
+            body: body,
+            encoding: encoding,
+          ),
         ),
-        RequestMethod.put => _client.put(
-          endpoint,
-          headers: headersWithAuth,
-          body: body,
-          encoding: encoding,
+        RequestMethod.post => wrapHttpCall(
+          () => _client.post(
+            endpoint,
+            headers: headersWithAuth,
+            body: body,
+            encoding: encoding,
+          ),
+        ),
+        RequestMethod.put => wrapHttpCall(
+          () => _client.put(
+            endpoint,
+            headers: headersWithAuth,
+            body: body,
+            encoding: encoding,
+          ),
         ),
       };
-    }
+    });
 
-    var response = await makeRequest();
+    var response = await $(makeRequest());
 
     if (response.statusCode == 401 && isAuthenticated) {
-      try {
-        await authenticationService.refreshCredentials();
-
-        response = await makeRequest();
-      } on Exception {
+      final refreshed = await authenticationService.refreshCredentials().run();
+      if (refreshed.isLeft()) {
         return response;
       }
+
+      response = await $(makeRequest());
     }
 
     return response;
-  }
+  });
 
-  Future<http.Response> _upload({
+  TaskEither<ApiException, AuthCredentials> _credentials(
+    TaskEither<CredentialRetrievalFailedException, AuthCredentials> Function()
+    retrieve,
+  ) => retrieve().mapLeft(ApiAuthenticationFailedException.new);
+
+  TaskEither<ApiException, http.Response> _upload({
     required Uri endpoint,
     required String fieldName,
     required List<int> fileBytes,
@@ -117,7 +146,7 @@ class HttpApiService<DefaultRepresentation extends Object> {
     Map<String, String>? headers,
     Map<String, String>? queryParameters,
     bool isAuthenticated = false,
-  }) async {
+  }) => .Do(($) async {
     final uploadEndpoint = endpoint.replace(
       queryParameters: {..._defaultQueryParameters, ...?queryParameters},
     );
@@ -128,7 +157,9 @@ class HttpApiService<DefaultRepresentation extends Object> {
     final allHeaders = {...?headers};
 
     if (isAuthenticated) {
-      final credentials = await authenticationService.getCredentials();
+      final credentials = await $(
+        _credentials(authenticationService.getCredentials),
+      );
       allHeaders.addAll(credentials.headers);
     }
     request.headers.addAll(allHeaders);
@@ -141,9 +172,15 @@ class HttpApiService<DefaultRepresentation extends Object> {
       http.MultipartFile.fromBytes(fieldName, fileBytes, filename: fileName),
     );
 
-    final streamedResponse = await _client.send(request);
-    return http.Response.fromStream(streamedResponse);
-  }
+    return $(
+      .tryCatch(
+        () async => http.Response.fromStream(await _client.send(request)),
+        (error, _) => error is SocketException
+            ? const ApiConnectionFailureException()
+            : const ApiCallFailedException(),
+      ),
+    );
+  });
 }
 
 /// A representation of an accessible web endpoint from which data
@@ -174,7 +211,7 @@ class Endpoint<ResponseModel, RequestModel> {
 
   /// Executes a multipart POST request for file uploading.
   /// This method is used to upload files to the server.
-  Future<ApiResponse<ResponseModel>> upload({
+  TaskEither<ApiException, ApiResponse<ResponseModel>> upload({
     required String fieldName,
     required List<int> fileBytes,
     required String fileName,
@@ -182,28 +219,42 @@ class Endpoint<ResponseModel, RequestModel> {
     Map<String, String>? fields,
     Map<String, String>? headers,
     Map<String, String>? queryParameters,
-  }) async {
-    final response = await _apiService._upload(
-      endpoint: _endpoint,
-      fieldName: fieldName,
-      fileBytes: fileBytes,
-      fileName: fileName,
-      method: method,
-      fields: fields,
-      headers: {..._defaultHeaders, ...?headers},
-      queryParameters: {..._defaultQueryParameters, ...?queryParameters},
-      isAuthenticated: _authenticated,
-    );
+  }) => _apiService
+      ._upload(
+        endpoint: _endpoint,
+        fieldName: fieldName,
+        fileBytes: fileBytes,
+        fileName: fileName,
+        method: method,
+        fields: fields,
+        headers: {..._defaultHeaders, ...?headers},
+        queryParameters: {..._defaultQueryParameters, ...?queryParameters},
+        isAuthenticated: _authenticated,
+      )
+      .flatMap((response) => .fromEither(_toApiResponse(response)));
 
+  Either<ApiException, ApiResponse<ResponseModel>> _toApiResponse(
+    http.Response response,
+  ) {
     if (response.statusCode >= 400) {
-      throw ApiException(inner: response);
+      return .left(ApiResponseException(inner: response));
     }
 
     try {
-      final converted = _converter.toRepresentation(response.body);
-      return ApiResponse(inner: response, result: converted);
+      return .of(
+        ApiResponse(
+          inner: response,
+          result: _converter.toRepresentation(response.body),
+        ),
+      );
+
+      // we catch any exception here because a converter might introduce
+      // an exception, but we still would like access to the original response
+      // for easier debugging
     } on Exception catch (e, s) {
-      throw ApiException(inner: response, error: e, stackTrace: s);
+      return .left(
+        ApiResponseException(inner: response, error: e, stackTrace: s),
+      );
     }
   }
 
@@ -331,12 +382,12 @@ class Endpoint<ResponseModel, RequestModel> {
   );
 
   /// Execute a GET request.
-  Future<ApiResponse<ResponseModel>> get({
+  TaskEither<ApiException, ApiResponse<ResponseModel>> get({
     Map<String, String>? headers,
     Map<String, dynamic /*String?|Iterable<String>*/>? queryParameters,
     RequestModel? requestModel,
     Encoding? encoding,
-  }) async => _request(
+  }) => _request(
     requestMethod: RequestMethod.get,
     headers: headers,
     queryParameters: queryParameters,
@@ -345,12 +396,12 @@ class Endpoint<ResponseModel, RequestModel> {
   );
 
   /// Execute a DELETE request.
-  Future<ApiResponse<ResponseModel>> delete({
+  TaskEither<ApiException, ApiResponse<ResponseModel>> delete({
     Map<String, String>? headers,
     Map<String, dynamic /*String?|Iterable<String>*/>? queryParameters,
     RequestModel? requestModel,
     Encoding? encoding,
-  }) async => _request(
+  }) => _request(
     requestMethod: RequestMethod.delete,
     headers: headers,
     queryParameters: queryParameters,
@@ -359,12 +410,12 @@ class Endpoint<ResponseModel, RequestModel> {
   );
 
   /// Execute a PATCH request.
-  Future<ApiResponse<ResponseModel>> patch({
+  TaskEither<ApiException, ApiResponse<ResponseModel>> patch({
     Map<String, String>? headers,
     Map<String, dynamic /*String?|Iterable<String>*/>? queryParameters,
     RequestModel? requestModel,
     Encoding? encoding,
-  }) async => _request(
+  }) => _request(
     requestMethod: RequestMethod.patch,
     headers: headers,
     queryParameters: queryParameters,
@@ -373,12 +424,12 @@ class Endpoint<ResponseModel, RequestModel> {
   );
 
   /// Execute a POST request.
-  Future<ApiResponse<ResponseModel>> post({
+  TaskEither<ApiException, ApiResponse<ResponseModel>> post({
     Map<String, String>? headers,
     Map<String, dynamic /*String?|Iterable<String>*/>? queryParameters,
     RequestModel? requestModel,
     Encoding? encoding,
-  }) async => _request(
+  }) => _request(
     requestMethod: RequestMethod.post,
     headers: headers,
     queryParameters: queryParameters,
@@ -387,12 +438,12 @@ class Endpoint<ResponseModel, RequestModel> {
   );
 
   /// Execute a PUT request.
-  Future<ApiResponse<ResponseModel>> put({
+  TaskEither<ApiException, ApiResponse<ResponseModel>> put({
     Map<String, String>? headers,
     Map<String, dynamic /*String?|Iterable<String>*/>? queryParameters,
     RequestModel? requestModel,
     Encoding? encoding,
-  }) async => _request(
+  }) => _request(
     requestMethod: RequestMethod.put,
     headers: headers,
     requestModel: requestModel,
@@ -400,13 +451,13 @@ class Endpoint<ResponseModel, RequestModel> {
     encoding: encoding,
   );
 
-  Future<ApiResponse<ResponseModel>> _request({
+  TaskEither<ApiException, ApiResponse<ResponseModel>> _request({
     required RequestMethod requestMethod,
     Map<String, String>? headers,
     Map<String, dynamic /*String?|Iterable<String>*/>? queryParameters,
     RequestModel? requestModel,
     Encoding? encoding,
-  }) async {
+  }) {
     final endpoint = _endpoint.replace(
       queryParameters: {..._defaultQueryParameters, ...?queryParameters},
     );
@@ -416,37 +467,56 @@ class Endpoint<ResponseModel, RequestModel> {
       body = _converter.fromRepresentation(requestModel);
     }
 
-    final response = await _apiService._request(
-      endpoint,
-      requestMethod,
-      headers: {..._defaultHeaders, ...?headers},
-      body: body,
-      encoding: encoding,
-      isAuthenticated: _authenticated,
-    );
-
-    if (response.statusCode >= 400) {
-      throw ApiException(inner: response);
-    }
-
-    try {
-      final converted = _converter.toRepresentation(response.body);
-
-      return ApiResponse(inner: response, result: converted);
-
-      // we catch any exception here because an converter might introduce
-      // an exception, but we still would like access to the original response
-      // for easier debugging
-    } on Exception catch (e, s) {
-      throw ApiException(inner: response, error: e, stackTrace: s);
-    }
+    return _apiService
+        ._request(
+          endpoint,
+          requestMethod,
+          headers: {..._defaultHeaders, ...?headers},
+          body: body,
+          encoding: encoding,
+          isAuthenticated: _authenticated,
+        )
+        .flatMap((response) => .fromEither(_toApiResponse(response)));
   }
 }
 
-/// Exception that's thrown when the Api call resulted in an exception
-class ApiException implements Exception {
+/// Base Exception thrown when an api call goes wrong
+sealed class const ApiException() {
+  /// Constructs the exception
+  this;
+}
+
+/// Exception thrown when the api call results in a connection failure
+final class const ApiConnectionFailureException() extends ApiException {
+  ///
+  this;
+}
+
+/// Exception thrown when the api call results in a generic failure
+final class const ApiCallFailedException() extends ApiException {
+  ///
+  this;
+}
+
+/// Exception returned when the credentials could not be retrieved
+final class const ApiAuthenticationFailedException(this.inner)
+    extends ApiException {
+  ///
+  this;
+
+  /// The failure reported by the authentication service.
+  final CredentialRetrievalFailedException inner;
+}
+
+/// Exception returned when the Api call resulted in an error response or
+/// the response could not be converted
+final class ApiResponseException extends ApiException {
   /// Creates an API Exception
-  const ApiException({required this.inner, this.error, this.stackTrace});
+  const ApiResponseException({
+    required this.inner,
+    this.error,
+    this.stackTrace,
+  });
 
   /// the http status code that resulted from a request
   int get statusCode => inner.statusCode;

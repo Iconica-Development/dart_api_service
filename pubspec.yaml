@@ -9,6 +9,7 @@ environment:
   sdk: ^3.13.0
 
 dependencies:
+  fpdart: ^1.2.0
   http: ^1.2.1
   meta: ">=0.0.1 <2.0.0"
 
