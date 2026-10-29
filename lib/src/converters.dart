@@ -103,7 +103,9 @@ class MapJsonResponseConverter
   @override
   ToRepresentationResult<JsonObject> toRepresentation(Object object) =>
       _toRepresentation(() {
-        if (object is! String || object.isEmpty) return {};
+        if (object is! String || object.isEmpty) {
+          throw FormatException("Expected a non-empty JSON string", object);
+        }
         return jsonDecode(object) as JsonObject;
       });
 
@@ -140,13 +142,16 @@ class ListMapJsonResponseConverter
   ToRepresentationResult<ListMapJsonResponse> toRepresentation(Object object) =>
       _toRepresentation(() {
         final result = jsonDecode(object as String);
-        if (result is List) {
-          return [
-            for (final entry in result)
-              if (entry is Map<String, dynamic>) entry,
-          ];
+        if (result is! List) {
+          throw FormatException("Expected a JSON list", object);
         }
-        return [];
+        return [
+          for (final entry in result)
+            if (entry is Map<String, dynamic>)
+              entry
+            else
+              throw FormatException("Expected a JSON object in list", entry),
+        ];
       });
 
   @override
@@ -168,10 +173,10 @@ class JsonMapResponseConverter
   ToRepresentationResult<Map<String, dynamic>> toRepresentation(
     Object? input,
   ) => _toRepresentation(() {
-    if (input is String && input.isNotEmpty) {
-      return jsonDecode(input) as Map<String, dynamic>;
+    if (input is! String || input.isEmpty) {
+      throw FormatException("Expected a non-empty JSON string", input);
     }
-    return {};
+    return jsonDecode(input) as Map<String, dynamic>;
   });
 
   @override
