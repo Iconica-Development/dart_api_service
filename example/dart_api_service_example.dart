@@ -1,13 +1,14 @@
 // ignore_for_file: avoid_print
 
-import "dart:async";
 import "dart:io";
 
 import "package:dart_api_service/dart_api_service.dart";
+import "package:fpdart/fpdart.dart";
 
 class MockAuthService extends AuthenticationService {
   @override
-  FutureOr<AuthCredentials> getCredentials() => MockCredentials();
+  TaskEither<CredentialRetrievalFailedException, AuthCredentials>
+  getCredentials() => .of(MockCredentials());
 }
 
 class MockCredentials implements AuthCredentials {
@@ -91,13 +92,16 @@ void main() async {
       .addHeaders({"accept": "application/json"})
       .withVariables({"post": 1});
 
-  try {
-    final post = await comments.get();
-    print(post.result);
-    print(post.inner.request?.headers);
-  } on ApiException catch (e) {
-    print(e.statusCode);
-    print(e.inner.body);
+  final result = await comments.get().run();
+  switch (result) {
+    case Right(value: final post):
+      print(post.result);
+      print(post.inner.request?.headers);
+    case Left(value: final ApiResponseException e):
+      print(e.statusCode);
+      print(e.inner.body);
+    case Left(value: final e):
+      print(e);
   }
 
   exit(1);
