@@ -240,22 +240,9 @@ class Endpoint<ResponseModel, RequestModel> {
       return .left(ApiResponseException(inner: response));
     }
 
-    try {
-      return .of(
-        ApiResponse(
-          inner: response,
-          result: _converter.toRepresentation(response.body),
-        ),
-      );
-
-      // we catch any exception here because a converter might introduce
-      // an exception, but we still would like access to the original response
-      // for easier debugging
-    } on Exception catch (e, s) {
-      return .left(
-        ApiResponseException(inner: response, error: e, stackTrace: s),
-      );
-    }
+    return _converter
+        .toRepresentation(response.body)
+        .map((result) => ApiResponse(inner: response, result: result));
   }
 
   /// Created a new endpoint from this endpoint.
@@ -462,21 +449,22 @@ class Endpoint<ResponseModel, RequestModel> {
       queryParameters: {..._defaultQueryParameters, ...?queryParameters},
     );
 
-    Object? body;
-    if (requestModel != null) {
-      body = _converter.fromRepresentation(requestModel);
-    }
+    final bodyResult = requestModel == null
+        ? Either<ApiException, Object?>.of(null)
+        : _converter.fromRepresentation(requestModel);
 
-    return _apiService
-        ._request(
-          endpoint,
-          requestMethod,
-          headers: {..._defaultHeaders, ...?headers},
-          body: body,
-          encoding: encoding,
-          isAuthenticated: _authenticated,
-        )
-        .flatMap((response) => .fromEither(_toApiResponse(response)));
+    return TaskEither<ApiException, Object?>.fromEither(bodyResult).flatMap(
+      (body) => _apiService
+          ._request(
+            endpoint,
+            requestMethod,
+            headers: {..._defaultHeaders, ...?headers},
+            body: body,
+            encoding: encoding,
+            isAuthenticated: _authenticated,
+          )
+          .flatMap((response) => .fromEither(_toApiResponse(response))),
+    );
   }
 }
 
@@ -484,6 +472,30 @@ class Endpoint<ResponseModel, RequestModel> {
 sealed class const ApiException() {
   /// Constructs the exception
   this;
+}
+
+/// Exception returned when a response body could not be converted
+final class RequestObjectSerializationApiException extends ApiException {
+  /// Creates the exception
+  const RequestObjectSerializationApiException({this.error, this.stackTrace});
+
+  /// The error that occurred in the conversion.
+  final Object? error;
+
+  /// The stacktrace of the error.
+  final StackTrace? stackTrace;
+}
+
+/// Exception returned when a request object could not be converted
+final class ResponseObjectSerializationApiException extends ApiException {
+  /// Creates the exception
+  const ResponseObjectSerializationApiException({this.error, this.stackTrace});
+
+  /// The error that occurred in the conversion.
+  final Object? error;
+
+  /// The stacktrace of the error.
+  final StackTrace? stackTrace;
 }
 
 /// Exception thrown when the api call results in a connection failure
