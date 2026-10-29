@@ -78,7 +78,7 @@ class BasicAuthCredentials implements AuthCredentials {
 
   @override
   Map<String, String> get headers {
-    var accessToken = base64Encode(utf8.encode("$username:$password"));
+    final accessToken = base64Encode(utf8.encode("$username:$password"));
     return {"Authorization": "Basic $accessToken"};
   }
 }

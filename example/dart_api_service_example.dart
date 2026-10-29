@@ -74,17 +74,17 @@ class PostComment implements ApiSerializable {
 }
 
 void main() async {
-  var authService = MockAuthService();
-  var apiService = HttpApiService(
+  final authService = MockAuthService();
+  final apiService = HttpApiService(
     defaultHeaders: {"Content-Type": "application/json"},
     baseUrl: Uri.parse("https://jsonplaceholder.typicode.com"),
     authenticationService: authService,
   );
 
-  var converter = ApiConverter.fromSerializable(PostComment.fromMap);
+  final converter = ApiConverter.fromSerializable(PostComment.fromMap);
 
-  var endPoint = apiService.endpoint("/posts/:post");
-  var comments = endPoint
+  final endPoint = apiService.endpoint("/posts/:post");
+  final comments = endPoint
       .child("/comments")
       .withConverter(converter.list())
       .authenticate()
@@ -92,7 +92,7 @@ void main() async {
       .withVariables({"post": 1});
 
   try {
-    var post = await comments.get();
+    final post = await comments.get();
     print(post.result);
     print(post.inner.request?.headers);
   } on ApiException catch (e) {

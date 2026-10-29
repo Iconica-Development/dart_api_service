@@ -6,8 +6,8 @@ class MockedClient extends Mock implements Client {}
 
 void main() {
   group("ApiService", () {
-    var baseUrl = Uri.parse("https://test.com");
-    var client = MockedClient();
+    final baseUrl = Uri.parse("https://test.com");
+    final client = MockedClient();
     late HttpApiService sut;
 
     registerFallbackValue(Uri());
@@ -70,7 +70,7 @@ void main() {
 
     group("Should use correct httpMethod when calling", () {
       test("post", () async {
-        var expected = Response("test", 200);
+        final expected = Response("test", 200);
 
         Future<Response> postDefinition() => client.post(
           any<Uri>(),
@@ -81,7 +81,7 @@ void main() {
 
         when(postDefinition).thenAnswer((invocation) async => expected);
 
-        var response = await sut.endpoint("/").post();
+        final response = await sut.endpoint("/").post();
 
         expect(response.inner, equals(expected));
 
@@ -89,14 +89,14 @@ void main() {
       });
 
       test("get", () async {
-        var expected = Response("test", 200);
+        final expected = Response("test", 200);
 
         Future<Response> getDefinition() =>
             client.get(any<Uri>(), headers: any(named: "headers"));
 
         when(getDefinition).thenAnswer((invocation) async => expected);
 
-        var response = await sut.endpoint("/").get();
+        final response = await sut.endpoint("/").get();
 
         expect(response.inner, equals(expected));
 
@@ -104,7 +104,7 @@ void main() {
       });
 
       test("delete", () async {
-        var expected = Response("test", 200);
+        final expected = Response("test", 200);
 
         Future<Response> deleteDefinition() => client.delete(
           any<Uri>(),
@@ -115,7 +115,7 @@ void main() {
 
         when(deleteDefinition).thenAnswer((invocation) async => expected);
 
-        var response = await sut.endpoint("/").delete();
+        final response = await sut.endpoint("/").delete();
 
         expect(response.inner, equals(expected));
 
@@ -123,7 +123,7 @@ void main() {
       });
 
       test("patch", () async {
-        var expected = Response("test", 200);
+        final expected = Response("test", 200);
 
         Future<Response> patchDefinition() => client.patch(
           any<Uri>(),
@@ -134,7 +134,7 @@ void main() {
 
         when(patchDefinition).thenAnswer((invocation) async => expected);
 
-        var response = await sut.endpoint("/").patch();
+        final response = await sut.endpoint("/").patch();
 
         expect(response.inner, equals(expected));
 
@@ -142,7 +142,7 @@ void main() {
       });
 
       test("put", () async {
-        var expected = Response("test", 200);
+        final expected = Response("test", 200);
 
         Future<Response> putDefinition() => client.put(
           any<Uri>(),
@@ -153,7 +153,7 @@ void main() {
 
         when(putDefinition).thenAnswer((invocation) async => expected);
 
-        var response = await sut.endpoint("/").put();
+        final response = await sut.endpoint("/").put();
 
         expect(response.inner, equals(expected));
 

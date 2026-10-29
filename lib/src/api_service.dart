@@ -8,18 +8,15 @@ import "package:meta/meta.dart";
 class HttpApiService<DefaultRepresentation extends Object> {
   /// Create the HttpApiService
   HttpApiService({
-    required Uri baseUrl,
+    required this._baseUrl,
     this.authenticationService = const EmptyAuthService(),
     ApiConverter<DefaultRepresentation, DefaultRepresentation>?
     apiResponseConverter,
-    Map<String, String> defaultHeaders = const {},
-    Map<String, String> defaultQueryParameters = const {},
+    this._defaultHeaders = const {},
+    this._defaultQueryParameters = const {},
     http.Client? client,
-  }) : _defaultHeaders = defaultHeaders,
-       _defaultQueryParameters = defaultQueryParameters,
-       _apiResponseConverter =
+  }) : _apiResponseConverter =
            apiResponseConverter ?? NonConverter<DefaultRepresentation>(),
-       _baseUrl = baseUrl,
        _client = client ?? http.Client();
 
   final ApiConverter<DefaultRepresentation, DefaultRepresentation>
@@ -62,7 +59,7 @@ class HttpApiService<DefaultRepresentation extends Object> {
     Future<http.Response> makeRequest() async {
       var headersWithAuth = headers ?? {};
       if (isAuthenticated) {
-        var credentials = await authenticationService.getCredentials();
+        final credentials = await authenticationService.getCredentials();
         headersWithAuth = {...headersWithAuth, ...credentials.headers};
       }
 
@@ -121,14 +118,17 @@ class HttpApiService<DefaultRepresentation extends Object> {
     Map<String, String>? queryParameters,
     bool isAuthenticated = false,
   }) async {
-    endpoint = endpoint.replace(
+    final uploadEndpoint = endpoint.replace(
       queryParameters: {..._defaultQueryParameters, ...?queryParameters},
     );
-    var request = http.MultipartRequest(method.name.toUpperCase(), endpoint);
-    var allHeaders = {...?headers};
+    final request = http.MultipartRequest(
+      method.name.toUpperCase(),
+      uploadEndpoint,
+    );
+    final allHeaders = {...?headers};
 
     if (isAuthenticated) {
-      var credentials = await authenticationService.getCredentials();
+      final credentials = await authenticationService.getCredentials();
       allHeaders.addAll(credentials.headers);
     }
     request.headers.addAll(allHeaders);
@@ -141,7 +141,7 @@ class HttpApiService<DefaultRepresentation extends Object> {
       http.MultipartFile.fromBytes(fieldName, fileBytes, filename: fileName),
     );
 
-    var streamedResponse = await _client.send(request);
+    final streamedResponse = await _client.send(request);
     return http.Response.fromStream(streamedResponse);
   }
 }
@@ -154,18 +154,13 @@ class Endpoint<ResponseModel, RequestModel> {
   /// This will cause the service to retrieve the [AuthCredentials] when trying
   /// to execute this endpoint
   const Endpoint._({
-    required Uri endpoint,
-    required ApiConverter<ResponseModel, RequestModel> converter,
-    required HttpApiService apiService,
-    Map<String, String> defaultHeaders = const {},
+    required this._endpoint,
+    required this._converter,
+    required this._apiService,
+    this._defaultHeaders = const {},
     Map<String, String> defaultQueryParameter = const {},
-    bool authenticated = false,
-  }) : _defaultHeaders = defaultHeaders,
-       _defaultQueryParameters = defaultQueryParameter,
-       _converter = converter,
-       _authenticated = authenticated,
-       _apiService = apiService,
-       _endpoint = endpoint;
+    this._authenticated = false,
+  }) : _defaultQueryParameters = defaultQueryParameter;
 
   final Uri _endpoint;
   final HttpApiService _apiService;
@@ -188,7 +183,7 @@ class Endpoint<ResponseModel, RequestModel> {
     Map<String, String>? headers,
     Map<String, String>? queryParameters,
   }) async {
-    var response = await _apiService._upload(
+    final response = await _apiService._upload(
       endpoint: _endpoint,
       fieldName: fieldName,
       fileBytes: fileBytes,
@@ -205,7 +200,7 @@ class Endpoint<ResponseModel, RequestModel> {
     }
 
     try {
-      var converted = _converter.toRepresentation(response.body);
+      final converted = _converter.toRepresentation(response.body);
       return ApiResponse(inner: response, result: converted);
     } on Exception catch (e, s) {
       throw ApiException(inner: response, error: e, stackTrace: s);
@@ -214,7 +209,7 @@ class Endpoint<ResponseModel, RequestModel> {
 
   /// Created a new endpoint from this endpoint.
   Endpoint<ResponseModel, RequestModel> child(String path) {
-    var newPath = "${_endpoint.path}$path";
+    final newPath = "${_endpoint.path}$path";
     return Endpoint._(
       endpoint: _endpoint.replace(path: newPath),
       converter: _converter,
@@ -286,7 +281,7 @@ class Endpoint<ResponseModel, RequestModel> {
   Endpoint<ResponseModel, RequestModel> withVariables(
     Map<String, dynamic> variables,
   ) {
-    var newPath = variables.entries.fold(
+    final newPath = variables.entries.fold(
       _endpoint.path,
       (previousValue, element) =>
           previousValue.replaceAll(":${element.key}", "${element.value}"),
@@ -312,8 +307,8 @@ class Endpoint<ResponseModel, RequestModel> {
   );
 
   /// Add a response converter to more easily handle response conversion
-  Endpoint<Response, Request> withConverter<Response, Request>(
-    ApiConverter<Response, Request> converter,
+  Endpoint<AResponse, ARequest> withConverter<AResponse, ARequest>(
+    ApiConverter<AResponse, ARequest> converter,
   ) => Endpoint._(
     endpoint: _endpoint,
     converter: converter,
@@ -324,8 +319,8 @@ class Endpoint<ResponseModel, RequestModel> {
   );
 
   /// Change the multiplicity of the endpoint
-  Endpoint<Response, Request> changeMultiplicity<Response, Request>(
-    ApiConverter<Response, Request> Function(
+  Endpoint<AResponse, ARequest> changeMultiplicity<AResponse, ARequest>(
+    ApiConverter<AResponse, ARequest> Function(
       MultiplicitySupportedConverter<ResponseModel, RequestModel> converter,
     )
     changer,
@@ -412,7 +407,7 @@ class Endpoint<ResponseModel, RequestModel> {
     RequestModel? requestModel,
     Encoding? encoding,
   }) async {
-    var endpoint = _endpoint.replace(
+    final endpoint = _endpoint.replace(
       queryParameters: {..._defaultQueryParameters, ...?queryParameters},
     );
 
@@ -421,7 +416,7 @@ class Endpoint<ResponseModel, RequestModel> {
       body = _converter.fromRepresentation(requestModel);
     }
 
-    var response = await _apiService._request(
+    final response = await _apiService._request(
       endpoint,
       requestMethod,
       headers: {..._defaultHeaders, ...?headers},
@@ -435,7 +430,7 @@ class Endpoint<ResponseModel, RequestModel> {
     }
 
     try {
-      var converted = _converter.toRepresentation(response.body);
+      final converted = _converter.toRepresentation(response.body);
 
       return ApiResponse(inner: response, result: converted);
 
