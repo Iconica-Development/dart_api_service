@@ -1,4 +1,4 @@
-## Unreleased
+## 2.0.0
 - Requests, converters and authentication now return fpdart `TaskEither`/`Either` instead of throwing
 - Added `allResponsesAllowed` to the service and endpoints to bypass the status >= 400 check
 - Added `HttpApiService.mocked` and `MockHttpClient` for mocking endpoints without a mocking library
