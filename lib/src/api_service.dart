@@ -2,7 +2,6 @@ import "dart:convert";
 import "dart:io";
 
 import "package:dart_api_service/dart_api_service.dart";
-import "package:fpdart/fpdart.dart";
 import "package:http/http.dart" as http;
 import "package:meta/meta.dart";
 
@@ -21,6 +20,59 @@ class HttpApiService<DefaultRepresentation extends Object> {
   }) : _apiResponseConverter =
            apiResponseConverter ?? NonConverter<DefaultRepresentation>(),
        _client = client ?? http.Client();
+
+  /// Creates an [HttpApiService] whose client is a [MockHttpClient] that
+  /// answers requests using the given [mocks], without any mocking library.
+  ///
+  /// Every entry in [mocks] receives a service with the same configuration
+  /// (base URL, default headers, ...) so mocks can be defined with the same
+  /// syntax as regular calls:
+  ///
+  /// ```dart
+  /// final service = HttpApiService.mocked(
+  ///   baseUrl: Uri.parse("https://test.com"),
+  ///   mocks: [
+  ///     (service) => service
+  ///         .endpoint("/test/:id")
+  ///         .withVariables({"id": "1"})
+  ///         .getMocker()
+  ///         .returns((request) => jsonEncode({
+  ///               "something": request.queryParameters["test"],
+  ///             })),
+  ///   ],
+  /// );
+  /// ```
+  ///
+  /// Requests that match no mock are delegated to [fallbackClient]. Without a
+  /// fallback they fail with an [ApiConnectionFailureException] containing the
+  /// reason no mock could be resolved.
+  factory HttpApiService.mocked({
+    required Uri baseUrl,
+    required List<
+      MockDefinition Function(HttpApiService<DefaultRepresentation>)
+    >
+    mocks,
+    http.Client? fallbackClient,
+    AuthenticationService authenticationService = const EmptyAuthService(),
+    ApiConverter<DefaultRepresentation, DefaultRepresentation>?
+    apiResponseConverter,
+    Map<String, String> defaultHeaders = const {},
+    Map<String, String> defaultQueryParameters = const {},
+    bool allResponsesAllowed = false,
+  }) {
+    final client = MockHttpClient(fallbackClient: fallbackClient);
+    final service = HttpApiService<DefaultRepresentation>(
+      baseUrl: baseUrl,
+      authenticationService: authenticationService,
+      apiResponseConverter: apiResponseConverter,
+      defaultHeaders: defaultHeaders,
+      defaultQueryParameters: defaultQueryParameters,
+      allResponsesAllowed: allResponsesAllowed,
+      client: client,
+    );
+    client.addAll([for (final mock in mocks) mock(service)]);
+    return service;
+  }
 
   final ApiConverter<DefaultRepresentation, DefaultRepresentation>
   _apiResponseConverter;
@@ -87,7 +139,7 @@ class HttpApiService<DefaultRepresentation extends Object> {
       ) => $(
         .tryCatch(callable, (error, _) {
           if (error is SocketException) {
-            return const ApiConnectionFailureException();
+            return ApiConnectionFailureException(reason: error.message);
           }
           return const ApiCallFailedException();
         }),
@@ -191,7 +243,7 @@ class HttpApiService<DefaultRepresentation extends Object> {
       .tryCatch(
         () async => http.Response.fromStream(await _client.send(request)),
         (error, _) => error is SocketException
-            ? const ApiConnectionFailureException()
+            ? ApiConnectionFailureException(reason: error.message)
             : const ApiCallFailedException(),
       ),
     );
@@ -376,6 +428,24 @@ class Endpoint<ResponseModel, RequestModel> {
     allResponsesAllowed: allowed,
   );
 
+  /// Creates a mocker for GET requests to this endpoint.
+  EndpointMocker getMocker() => _mocker(RequestMethod.get);
+
+  /// Creates a mocker for POST requests to this endpoint.
+  EndpointMocker postMocker() => _mocker(RequestMethod.post);
+
+  /// Creates a mocker for PUT requests to this endpoint.
+  EndpointMocker putMocker() => _mocker(RequestMethod.put);
+
+  /// Creates a mocker for PATCH requests to this endpoint.
+  EndpointMocker patchMocker() => _mocker(RequestMethod.patch);
+
+  /// Creates a mocker for DELETE requests to this endpoint.
+  EndpointMocker deleteMocker() => _mocker(RequestMethod.delete);
+
+  EndpointMocker _mocker(RequestMethod method) =>
+      EndpointMocker(endpoint: _endpoint, method: method);
+
   /// Marks that this method requires authentication to execute.
   Endpoint<ResponseModel, RequestModel> authenticate() => Endpoint._(
     endpoint: _endpoint,
@@ -543,9 +613,13 @@ final class ResponseObjectSerializationApiException extends ApiException {
 }
 
 /// Exception thrown when the api call results in a connection failure
-final class const ApiConnectionFailureException() extends ApiException {
+final class const ApiConnectionFailureException({this.reason})
+    extends ApiException {
   ///
   this;
+
+  /// The reason the connection failed, if known.
+  final String? reason;
 }
 
 /// Exception thrown when the api call results in a generic failure

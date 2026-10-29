@@ -1,3 +1,5 @@
+import "dart:convert";
+
 import "package:dart_api_service/dart_api_service.dart";
 import "package:mocktail/mocktail.dart";
 import "package:test/test.dart";
@@ -163,6 +165,87 @@ void main() {
 
         verify(putDefinition).called(1);
       });
+    });
+  });
+
+  group("HttpApiService.mocked", () {
+    final baseUrl = Uri.parse("https://test.com");
+
+    test("answers a matching request", () async {
+      final service = HttpApiService<Object>.mocked(
+        baseUrl: baseUrl,
+        mocks: [
+          (service) => service
+              .endpoint("/test/:id")
+              .withVariables({"id": "1"})
+              .getMocker()
+              .returns(
+                (request) =>
+                    jsonEncode({"something": request.queryParameters["test"]}),
+              ),
+        ],
+      );
+
+      final result = await service
+          .endpoint("/test/1")
+          .withConverter(const MapJsonResponseConverter())
+          .get(queryParameters: {"test": "value"})
+          .run();
+
+      expect(result.toNullable()?.result, {"something": "value"});
+    });
+
+    test("unbound variables match any value and method must match", () async {
+      final service = HttpApiService<Object>.mocked(
+        baseUrl: baseUrl,
+        mocks: [
+          (service) => service
+              .endpoint("/test/:id")
+              .postMocker()
+              .returns((_) => "", statusCode: 201),
+        ],
+      );
+
+      final created = await service.endpoint("/test/5").post().run();
+      expect(created.toNullable()?.statusCode, 201);
+
+      final wrongMethod = await service.endpoint("/test/5").get().run();
+      expect(
+        wrongMethod.getLeft().toNullable(),
+        isA<ApiConnectionFailureException>(),
+      );
+    });
+
+    test("unresolved request reports the reason", () async {
+      final service = HttpApiService<Object>.mocked(
+        baseUrl: baseUrl,
+        mocks: [],
+      );
+
+      final result = await service.endpoint("/missing").get().run();
+      final error = result.getLeft().toNullable();
+
+      expect(error, isA<ApiConnectionFailureException>());
+      expect(
+        (error! as ApiConnectionFailureException).reason,
+        contains("No mock resolved GET"),
+      );
+    });
+
+    test("delegates unmatched requests to the fallback client", () async {
+      registerFallbackValue(Request("GET", Uri()));
+      final fallback = MockedClient();
+      when(() => fallback.send(any()))
+          .thenAnswer((_) async => StreamedResponse(Stream.value([]), 202));
+
+      final service = HttpApiService<Object>.mocked(
+        baseUrl: baseUrl,
+        mocks: [],
+        fallbackClient: fallback,
+      );
+
+      final result = await service.endpoint("/other").get().run();
+      expect(result.toNullable()?.statusCode, 202);
     });
   });
 }
