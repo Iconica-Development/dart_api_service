@@ -314,7 +314,7 @@ class Endpoint<ResponseModel, RequestModel> {
     converter: _converter,
     apiService: _apiService,
     authenticated: _authenticated,
-    defaultHeaders: _defaultQueryParameters,
+    defaultHeaders: _defaultHeaders,
     defaultQueryParameter: queryParameters,
     allResponsesAllowed: _allResponsesAllowed,
   );
