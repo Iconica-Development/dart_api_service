@@ -12,4 +12,4 @@ jobs:
     permissions: write-all
     with:
       subfolder: '.'
-      flutter_version: '3.24.3'
+      flutter_version: '3.47.9'

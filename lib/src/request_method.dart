@@ -13,5 +13,5 @@ enum RequestMethod {
   patch,
 
   /// PUT request
-  put;
+  put,
 }

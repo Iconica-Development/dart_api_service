@@ -28,12 +28,12 @@ class PostComment implements ApiSerializable {
   });
 
   factory PostComment.fromMap(Map<String, dynamic> map) => PostComment(
-        postId: (map["postId"] ?? 0) as int,
-        id: (map["id"] ?? 0) as int,
-        name: (map["name"] ?? "") as String,
-        email: (map["email"] ?? "") as String,
-        body: (map["body"] ?? "") as String,
-      );
+    postId: (map["postId"] ?? 0) as int,
+    id: (map["id"] ?? 0) as int,
+    name: (map["name"] ?? "") as String,
+    email: (map["email"] ?? "") as String,
+    body: (map["body"] ?? "") as String,
+  );
   final int postId;
   final int id;
   final String name;
@@ -46,26 +46,26 @@ class PostComment implements ApiSerializable {
     String? name,
     String? email,
     String? body,
-  }) =>
-      PostComment(
-        postId: postId ?? this.postId,
-        id: id ?? this.id,
-        name: name ?? this.name,
-        email: email ?? this.email,
-        body: body ?? this.body,
-      );
+  }) => PostComment(
+    postId: postId ?? this.postId,
+    id: id ?? this.id,
+    name: name ?? this.name,
+    email: email ?? this.email,
+    body: body ?? this.body,
+  );
 
   @override
   Map<String, dynamic> toMap() => <String, dynamic>{
-        "postId": postId,
-        "id": id,
-        "name": name,
-        "email": email,
-        "body": body,
-      };
+    "postId": postId,
+    "id": id,
+    "name": name,
+    "email": email,
+    "body": body,
+  };
 
   @override
-  String toString() => "PostComment("
+  String toString() =>
+      "PostComment("
       "postId: $postId, "
       "id: $id, "
       "name: $name, "
@@ -86,15 +86,10 @@ void main() async {
   var endPoint = apiService.endpoint("/posts/:post");
   var comments = endPoint
       .child("/comments")
-      .withConverter(
-        converter.list(),
-      )
+      .withConverter(converter.list())
       .authenticate()
-      .addHeaders({
-    "accept": "application/json",
-  }).withVariables({
-    "post": 1,
-  });
+      .addHeaders({"accept": "application/json"})
+      .withVariables({"post": 1});
 
   try {
     var post = await comments.get();

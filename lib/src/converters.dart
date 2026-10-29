@@ -14,22 +14,20 @@ abstract interface class ApiConverter<Result, RequestObject> {
   static ModelJsonResponseConverter<T, T> model<T>({
     T Function(Map<String, dynamic>)? deserialize,
     Map<String, dynamic> Function(T)? serialize,
-  }) =>
-      ModelJsonResponseConverter(
-        deserialize: deserialize ?? (_) => throw UnimplementedError(),
-        serialize: serialize ?? (_) => throw UnimplementedError(),
-      );
+  }) => ModelJsonResponseConverter(
+    deserialize: deserialize ?? (_) => throw UnimplementedError(),
+    serialize: serialize ?? (_) => throw UnimplementedError(),
+  );
 
   /// Creates a modelJsonResponseConverter for a model
   /// implementing [ApiSerializable]
-  static ModelJsonResponseConverter<T, T>
-      fromSerializable<T extends ApiSerializable>(
-    T Function(Map<String, dynamic>) deserialize,
-  ) =>
-          ModelJsonResponseConverter<T, T>(
-            deserialize: deserialize,
-            serialize: (t) => t.toMap(),
-          );
+  static ModelJsonResponseConverter<T, T> fromSerializable<
+    T extends ApiSerializable
+  >(T Function(Map<String, dynamic>) deserialize) =>
+      ModelJsonResponseConverter<T, T>(
+        deserialize: deserialize,
+        serialize: (t) => t.toMap(),
+      );
 }
 
 /// Serializable object for quick converter creation
@@ -154,8 +152,8 @@ class ModelJsonResponseConverter<ResponseModel, RequestModel>
   ModelJsonResponseConverter({
     required ResponseModel Function(Map<String, dynamic>) deserialize,
     required Map<String, dynamic> Function(RequestModel) serialize,
-  })  : _serialize = serialize,
-        _deserialize = deserialize;
+  }) : _serialize = serialize,
+       _deserialize = deserialize;
 
   final MapJsonResponseConverter _jsonConverter =
       const MapJsonResponseConverter();
@@ -190,8 +188,8 @@ class ModelListJsonResponseConverter<ResponseModel, RequestModel>
   ModelListJsonResponseConverter({
     required ResponseModel Function(Map<String, dynamic>) deserialize,
     required Map<String, dynamic> Function(RequestModel) serialize,
-  })  : _serialize = serialize,
-        _deserialize = deserialize;
+  }) : _serialize = serialize,
+       _deserialize = deserialize;
 
   final ListMapJsonResponseConverter _jsonConverter =
       const ListMapJsonResponseConverter();
@@ -201,9 +199,7 @@ class ModelListJsonResponseConverter<ResponseModel, RequestModel>
   @override
   Object fromRepresentation(List<RequestModel> representation) =>
       _jsonConverter.fromRepresentation([
-        for (var entry in representation) ...[
-          _serialize(entry),
-        ],
+        for (var entry in representation) ...[_serialize(entry)],
       ]);
 
   @override

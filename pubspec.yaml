@@ -6,7 +6,7 @@ repository: https://github.com/Iconica-Development/dart_api_service
 publish_to: https://forgejo.internal.iconica.nl/api/packages/internal/pub/
 
 environment:
-  sdk: ^3.3.3
+  sdk: ^3.13.0
 
 dependencies:
   http: ^1.2.1

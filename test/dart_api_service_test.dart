@@ -17,20 +17,16 @@ void main() {
     });
 
     group("Should use proper headers when given through", () {
-      const testHeaders = {
-        "test": "value",
-      };
+      const testHeaders = {"test": "value"};
 
       // ignore: discarded_futures
       Future<Response> getDefinition() => client.post(
-            any<Uri>(),
-            headers: any(named: "headers", that: equals(testHeaders)),
-          );
+        any<Uri>(),
+        headers: any(named: "headers", that: equals(testHeaders)),
+      );
 
       setUp(() {
-        when(
-          getDefinition,
-        ).thenAnswer((invocation) async => Response("", 200));
+        when(getDefinition).thenAnswer((invocation) async => Response("", 200));
       });
 
       test("request call", () async {
@@ -73,123 +69,96 @@ void main() {
     });
 
     group("Should use correct httpMethod when calling", () {
-      test(
-        "post",
-        () async {
-          var expected = Response("test", 200);
+      test("post", () async {
+        var expected = Response("test", 200);
 
-          Future<Response> postDefinition() => client.post(
-                any<Uri>(),
-                headers: any(named: "headers"),
-                body: any(named: "body"),
-                encoding: any(named: "encoding"),
-              );
+        Future<Response> postDefinition() => client.post(
+          any<Uri>(),
+          headers: any(named: "headers"),
+          body: any(named: "body"),
+          encoding: any(named: "encoding"),
+        );
 
-          when(
-            postDefinition,
-          ).thenAnswer((invocation) async => expected);
+        when(postDefinition).thenAnswer((invocation) async => expected);
 
-          var response = await sut.endpoint("/").post();
+        var response = await sut.endpoint("/").post();
 
-          expect(response.inner, equals(expected));
+        expect(response.inner, equals(expected));
 
-          verify(postDefinition).called(1);
-        },
-      );
+        verify(postDefinition).called(1);
+      });
 
-      test(
-        "get",
-        () async {
-          var expected = Response("test", 200);
+      test("get", () async {
+        var expected = Response("test", 200);
 
-          Future<Response> getDefinition() => client.get(
-                any<Uri>(),
-                headers: any(named: "headers"),
-              );
+        Future<Response> getDefinition() =>
+            client.get(any<Uri>(), headers: any(named: "headers"));
 
-          when(
-            getDefinition,
-          ).thenAnswer((invocation) async => expected);
+        when(getDefinition).thenAnswer((invocation) async => expected);
 
-          var response = await sut.endpoint("/").get();
+        var response = await sut.endpoint("/").get();
 
-          expect(response.inner, equals(expected));
+        expect(response.inner, equals(expected));
 
-          verify(getDefinition).called(1);
-        },
-      );
+        verify(getDefinition).called(1);
+      });
 
-      test(
-        "delete",
-        () async {
-          var expected = Response("test", 200);
+      test("delete", () async {
+        var expected = Response("test", 200);
 
-          Future<Response> deleteDefinition() => client.delete(
-                any<Uri>(),
-                headers: any(named: "headers"),
-                body: any(named: "body"),
-                encoding: any(named: "encoding"),
-              );
+        Future<Response> deleteDefinition() => client.delete(
+          any<Uri>(),
+          headers: any(named: "headers"),
+          body: any(named: "body"),
+          encoding: any(named: "encoding"),
+        );
 
-          when(
-            deleteDefinition,
-          ).thenAnswer((invocation) async => expected);
+        when(deleteDefinition).thenAnswer((invocation) async => expected);
 
-          var response = await sut.endpoint("/").delete();
+        var response = await sut.endpoint("/").delete();
 
-          expect(response.inner, equals(expected));
+        expect(response.inner, equals(expected));
 
-          verify(deleteDefinition).called(1);
-        },
-      );
+        verify(deleteDefinition).called(1);
+      });
 
-      test(
-        "patch",
-        () async {
-          var expected = Response("test", 200);
+      test("patch", () async {
+        var expected = Response("test", 200);
 
-          Future<Response> patchDefinition() => client.patch(
-                any<Uri>(),
-                headers: any(named: "headers"),
-                body: any(named: "body"),
-                encoding: any(named: "encoding"),
-              );
+        Future<Response> patchDefinition() => client.patch(
+          any<Uri>(),
+          headers: any(named: "headers"),
+          body: any(named: "body"),
+          encoding: any(named: "encoding"),
+        );
 
-          when(
-            patchDefinition,
-          ).thenAnswer((invocation) async => expected);
+        when(patchDefinition).thenAnswer((invocation) async => expected);
 
-          var response = await sut.endpoint("/").patch();
+        var response = await sut.endpoint("/").patch();
 
-          expect(response.inner, equals(expected));
+        expect(response.inner, equals(expected));
 
-          verify(patchDefinition).called(1);
-        },
-      );
+        verify(patchDefinition).called(1);
+      });
 
-      test(
-        "put",
-        () async {
-          var expected = Response("test", 200);
+      test("put", () async {
+        var expected = Response("test", 200);
 
-          Future<Response> putDefinition() => client.put(
-                any<Uri>(),
-                headers: any(named: "headers"),
-                body: any(named: "body"),
-                encoding: any(named: "encoding"),
-              );
+        Future<Response> putDefinition() => client.put(
+          any<Uri>(),
+          headers: any(named: "headers"),
+          body: any(named: "body"),
+          encoding: any(named: "encoding"),
+        );
 
-          when(
-            putDefinition,
-          ).thenAnswer((invocation) async => expected);
+        when(putDefinition).thenAnswer((invocation) async => expected);
 
-          var response = await sut.endpoint("/").put();
+        var response = await sut.endpoint("/").put();
 
-          expect(response.inner, equals(expected));
+        expect(response.inner, equals(expected));
 
-          verify(putDefinition).called(1);
-        },
-      );
+        verify(putDefinition).called(1);
+      });
     });
   });
 }
