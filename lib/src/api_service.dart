@@ -16,6 +16,7 @@ class HttpApiService<DefaultRepresentation extends Object> {
     apiResponseConverter,
     this._defaultHeaders = const {},
     this._defaultQueryParameters = const {},
+    this.allResponsesAllowed = false,
     http.Client? client,
   }) : _apiResponseConverter =
            apiResponseConverter ?? NonConverter<DefaultRepresentation>(),
@@ -27,6 +28,19 @@ class HttpApiService<DefaultRepresentation extends Object> {
 
   /// The authentication service used to retrieve credentials.
   final AuthenticationService authenticationService;
+
+  /// Whether endpoints created by this service accept responses with a status
+  /// code of 400 or above as successful.
+  ///
+  /// By default these responses result in an [ApiResponseException]. When this
+  /// is `true` that check is bypassed and every response is passed to the
+  /// converter. The user is then responsible for handling error responses and
+  /// differing body structures in their converters, as an error body will
+  /// generally not have the same structure as a successful body.
+  ///
+  /// Can be overridden per endpoint with
+  /// [Endpoint.withAllResponsesAllowed].
+  final bool allResponsesAllowed;
   final Map<String, String> _defaultHeaders;
   final Map<String, String> _defaultQueryParameters;
   final http.Client _client;
@@ -48,6 +62,7 @@ class HttpApiService<DefaultRepresentation extends Object> {
     converter: _apiResponseConverter,
     apiService: this,
     defaultHeaders: _defaultHeaders,
+    allResponsesAllowed: allResponsesAllowed,
   );
 
   TaskEither<ApiException, http.Response> _request(
@@ -197,11 +212,13 @@ class Endpoint<ResponseModel, RequestModel> {
     this._defaultHeaders = const {},
     Map<String, String> defaultQueryParameter = const {},
     this._authenticated = false,
+    this._allResponsesAllowed = false,
   }) : _defaultQueryParameters = defaultQueryParameter;
 
   final Uri _endpoint;
   final HttpApiService _apiService;
   final bool _authenticated;
+  final bool _allResponsesAllowed;
   final Map<String, String> _defaultHeaders;
   final Map<String, String> _defaultQueryParameters;
   final ApiConverter<ResponseModel, RequestModel> _converter;
@@ -236,7 +253,7 @@ class Endpoint<ResponseModel, RequestModel> {
   Either<ApiException, ApiResponse<ResponseModel>> _toApiResponse(
     http.Response response,
   ) {
-    if (response.statusCode >= 400) {
+    if (!_allResponsesAllowed && response.statusCode >= 400) {
       return .left(ApiResponseException(inner: response));
     }
 
@@ -255,6 +272,7 @@ class Endpoint<ResponseModel, RequestModel> {
       authenticated: _authenticated,
       defaultHeaders: _defaultHeaders,
       defaultQueryParameter: _defaultQueryParameters,
+      allResponsesAllowed: _allResponsesAllowed,
     );
   }
 
@@ -275,6 +293,7 @@ class Endpoint<ResponseModel, RequestModel> {
     authenticated: _authenticated,
     defaultHeaders: headers,
     defaultQueryParameter: _defaultQueryParameters,
+    allResponsesAllowed: _allResponsesAllowed,
   );
 
   /// Add to existing default query parameters
@@ -297,6 +316,7 @@ class Endpoint<ResponseModel, RequestModel> {
     authenticated: _authenticated,
     defaultHeaders: _defaultQueryParameters,
     defaultQueryParameter: queryParameters,
+    allResponsesAllowed: _allResponsesAllowed,
   );
 
   /// Binds variables to paths.
@@ -331,8 +351,30 @@ class Endpoint<ResponseModel, RequestModel> {
       authenticated: _authenticated,
       defaultHeaders: _defaultHeaders,
       defaultQueryParameter: _defaultQueryParameters,
+      allResponsesAllowed: _allResponsesAllowed,
     );
   }
+
+  /// Sets whether responses with a status code of 400 or above are accepted.
+  ///
+  /// By default these responses result in an [ApiResponseException]. When
+  /// [allowed] is `true` that check is bypassed and every response is passed
+  /// to the converter. This means the user is responsible for handling error
+  /// responses and differing body structures in their converters, as an error
+  /// body will generally not have the same structure as a successful body.
+  ///
+  /// This overrides [HttpApiService.allResponsesAllowed] for this endpoint.
+  Endpoint<ResponseModel, RequestModel> withAllResponsesAllowed({
+    bool allowed = true,
+  }) => Endpoint._(
+    endpoint: _endpoint,
+    apiService: _apiService,
+    converter: _converter,
+    authenticated: _authenticated,
+    defaultHeaders: _defaultHeaders,
+    defaultQueryParameter: _defaultQueryParameters,
+    allResponsesAllowed: allowed,
+  );
 
   /// Marks that this method requires authentication to execute.
   Endpoint<ResponseModel, RequestModel> authenticate() => Endpoint._(
@@ -342,6 +384,7 @@ class Endpoint<ResponseModel, RequestModel> {
     authenticated: true,
     defaultHeaders: _defaultHeaders,
     defaultQueryParameter: _defaultQueryParameters,
+    allResponsesAllowed: _allResponsesAllowed,
   );
 
   /// Add a response converter to more easily handle response conversion
@@ -354,6 +397,7 @@ class Endpoint<ResponseModel, RequestModel> {
     authenticated: _authenticated,
     defaultHeaders: _defaultHeaders,
     defaultQueryParameter: _defaultQueryParameters,
+    allResponsesAllowed: _allResponsesAllowed,
   );
 
   /// Change the multiplicity of the endpoint
