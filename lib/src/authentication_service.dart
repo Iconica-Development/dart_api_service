@@ -62,9 +62,7 @@ class JWTAuthCredentials implements AuthCredentials {
   final String accessToken;
 
   @override
-  Map<String, String> get headers => {
-        "Authorization": "Bearer $accessToken",
-      };
+  Map<String, String> get headers => {"Authorization": "Bearer $accessToken"};
 }
 
 /// A representation of a basic authentication
@@ -81,18 +79,14 @@ class BasicAuthCredentials implements AuthCredentials {
   @override
   Map<String, String> get headers {
     var accessToken = base64Encode(utf8.encode("$username:$password"));
-    return {
-      "Authorization": "Basic $accessToken",
-    };
+    return {"Authorization": "Basic $accessToken"};
   }
 }
 
 /// A representation of a token authentication
 class TokenAuthCredentials implements AuthCredentials {
   /// Creates a tokenAuth object
-  const TokenAuthCredentials({
-    required this.token,
-  });
+  const TokenAuthCredentials({required this.token});
 
   /// The token representing the access method
   final String token;

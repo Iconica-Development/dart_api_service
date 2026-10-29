@@ -11,19 +11,19 @@ class HttpApiService<DefaultRepresentation extends Object> {
     required Uri baseUrl,
     this.authenticationService = const EmptyAuthService(),
     ApiConverter<DefaultRepresentation, DefaultRepresentation>?
-        apiResponseConverter,
+    apiResponseConverter,
     Map<String, String> defaultHeaders = const {},
     Map<String, String> defaultQueryParameters = const {},
     http.Client? client,
-  })  : _defaultHeaders = defaultHeaders,
-        _defaultQueryParameters = defaultQueryParameters,
-        _apiResponseConverter =
-            apiResponseConverter ?? NonConverter<DefaultRepresentation>(),
-        _baseUrl = baseUrl,
-        _client = client ?? http.Client();
+  }) : _defaultHeaders = defaultHeaders,
+       _defaultQueryParameters = defaultQueryParameters,
+       _apiResponseConverter =
+           apiResponseConverter ?? NonConverter<DefaultRepresentation>(),
+       _baseUrl = baseUrl,
+       _client = client ?? http.Client();
 
   final ApiConverter<DefaultRepresentation, DefaultRepresentation>
-      _apiResponseConverter;
+  _apiResponseConverter;
   final Uri _baseUrl;
 
   /// The authentication service used to retrieve credentials.
@@ -43,14 +43,13 @@ class HttpApiService<DefaultRepresentation extends Object> {
   /// Represents an accessible web endpoint.
   Endpoint<DefaultRepresentation, DefaultRepresentation> endpoint(
     String path,
-  ) =>
-      Endpoint._(
-        endpoint: _baseUrl.replace(path: path),
-        defaultQueryParameter: _defaultQueryParameters,
-        converter: _apiResponseConverter,
-        apiService: this,
-        defaultHeaders: _defaultHeaders,
-      );
+  ) => Endpoint._(
+    endpoint: _baseUrl.replace(path: path),
+    defaultQueryParameter: _defaultQueryParameters,
+    converter: _apiResponseConverter,
+    apiService: this,
+    defaultHeaders: _defaultHeaders,
+  );
 
   Future<http.Response> _request(
     Uri endpoint,
@@ -64,41 +63,35 @@ class HttpApiService<DefaultRepresentation extends Object> {
       var headersWithAuth = headers ?? {};
       if (isAuthenticated) {
         var credentials = await authenticationService.getCredentials();
-        headersWithAuth = {
-          ...headersWithAuth,
-          ...credentials.headers,
-        };
+        headersWithAuth = {...headersWithAuth, ...credentials.headers};
       }
 
       return switch (method) {
         RequestMethod.delete => _client.delete(
-            endpoint,
-            headers: headersWithAuth,
-            body: body,
-            encoding: encoding,
-          ),
-        RequestMethod.get => _client.get(
-            endpoint,
-            headers: headersWithAuth,
-          ),
+          endpoint,
+          headers: headersWithAuth,
+          body: body,
+          encoding: encoding,
+        ),
+        RequestMethod.get => _client.get(endpoint, headers: headersWithAuth),
         RequestMethod.patch => _client.patch(
-            endpoint,
-            headers: headersWithAuth,
-            body: body,
-            encoding: encoding,
-          ),
+          endpoint,
+          headers: headersWithAuth,
+          body: body,
+          encoding: encoding,
+        ),
         RequestMethod.post => _client.post(
-            endpoint,
-            headers: headersWithAuth,
-            body: body,
-            encoding: encoding,
-          ),
+          endpoint,
+          headers: headersWithAuth,
+          body: body,
+          encoding: encoding,
+        ),
         RequestMethod.put => _client.put(
-            endpoint,
-            headers: headersWithAuth,
-            body: body,
-            encoding: encoding,
-          ),
+          endpoint,
+          headers: headersWithAuth,
+          body: body,
+          encoding: encoding,
+        ),
       };
     }
 
@@ -129,10 +122,7 @@ class HttpApiService<DefaultRepresentation extends Object> {
     bool isAuthenticated = false,
   }) async {
     endpoint = endpoint.replace(
-      queryParameters: {
-        ..._defaultQueryParameters,
-        ...?queryParameters,
-      },
+      queryParameters: {..._defaultQueryParameters, ...?queryParameters},
     );
     var request = http.MultipartRequest(method.name.toUpperCase(), endpoint);
     var allHeaders = {...?headers};
@@ -148,11 +138,7 @@ class HttpApiService<DefaultRepresentation extends Object> {
     }
 
     request.files.add(
-      http.MultipartFile.fromBytes(
-        fieldName,
-        fileBytes,
-        filename: fileName,
-      ),
+      http.MultipartFile.fromBytes(fieldName, fileBytes, filename: fileName),
     );
 
     var streamedResponse = await _client.send(request);
@@ -174,12 +160,12 @@ class Endpoint<ResponseModel, RequestModel> {
     Map<String, String> defaultHeaders = const {},
     Map<String, String> defaultQueryParameter = const {},
     bool authenticated = false,
-  })  : _defaultHeaders = defaultHeaders,
-        _defaultQueryParameters = defaultQueryParameter,
-        _converter = converter,
-        _authenticated = authenticated,
-        _apiService = apiService,
-        _endpoint = endpoint;
+  }) : _defaultHeaders = defaultHeaders,
+       _defaultQueryParameters = defaultQueryParameter,
+       _converter = converter,
+       _authenticated = authenticated,
+       _apiService = apiService,
+       _endpoint = endpoint;
 
   final Uri _endpoint;
   final HttpApiService _apiService;
@@ -244,48 +230,41 @@ class Endpoint<ResponseModel, RequestModel> {
   /// This does override existing headers of the same name.
   Endpoint<ResponseModel, RequestModel> addHeaders(
     Map<String, String> headers,
-  ) =>
-      setDefaultHeaders({
-        ..._defaultHeaders,
-        ...headers,
-      });
+  ) => setDefaultHeaders({..._defaultHeaders, ...headers});
 
   /// Set the default headers
   Endpoint<ResponseModel, RequestModel> setDefaultHeaders(
     Map<String, String> headers,
-  ) =>
-      Endpoint._(
-        endpoint: _endpoint,
-        converter: _converter,
-        apiService: _apiService,
-        authenticated: _authenticated,
-        defaultHeaders: headers,
-        defaultQueryParameter: _defaultQueryParameters,
-      );
+  ) => Endpoint._(
+    endpoint: _endpoint,
+    converter: _converter,
+    apiService: _apiService,
+    authenticated: _authenticated,
+    defaultHeaders: headers,
+    defaultQueryParameter: _defaultQueryParameters,
+  );
 
   /// Add to existing default query parameters
   ///
   /// This does override existing query parameters of the same name.
   Endpoint<ResponseModel, RequestModel> addDefaultQueryParameters(
     Map<String, String> queryParameters,
-  ) =>
-      setDefaultQueryParameters({
-        ..._defaultQueryParameters,
-        ...queryParameters,
-      });
+  ) => setDefaultQueryParameters({
+    ..._defaultQueryParameters,
+    ...queryParameters,
+  });
 
   /// Set the default query parameters
   Endpoint<ResponseModel, RequestModel> setDefaultQueryParameters(
     Map<String, String> queryParameters,
-  ) =>
-      Endpoint._(
-        endpoint: _endpoint,
-        converter: _converter,
-        apiService: _apiService,
-        authenticated: _authenticated,
-        defaultHeaders: _defaultQueryParameters,
-        defaultQueryParameter: queryParameters,
-      );
+  ) => Endpoint._(
+    endpoint: _endpoint,
+    converter: _converter,
+    apiService: _apiService,
+    authenticated: _authenticated,
+    defaultHeaders: _defaultQueryParameters,
+    defaultQueryParameter: queryParameters,
+  );
 
   /// Binds variables to paths.
   ///
@@ -324,127 +303,117 @@ class Endpoint<ResponseModel, RequestModel> {
 
   /// Marks that this method requires authentication to execute.
   Endpoint<ResponseModel, RequestModel> authenticate() => Endpoint._(
-        endpoint: _endpoint,
-        apiService: _apiService,
-        converter: _converter,
-        authenticated: true,
-        defaultHeaders: _defaultHeaders,
-        defaultQueryParameter: _defaultQueryParameters,
-      );
+    endpoint: _endpoint,
+    apiService: _apiService,
+    converter: _converter,
+    authenticated: true,
+    defaultHeaders: _defaultHeaders,
+    defaultQueryParameter: _defaultQueryParameters,
+  );
 
   /// Add a response converter to more easily handle response conversion
   Endpoint<Response, Request> withConverter<Response, Request>(
     ApiConverter<Response, Request> converter,
-  ) =>
-      Endpoint._(
-        endpoint: _endpoint,
-        converter: converter,
-        apiService: _apiService,
-        authenticated: _authenticated,
-        defaultHeaders: _defaultHeaders,
-        defaultQueryParameter: _defaultQueryParameters,
-      );
+  ) => Endpoint._(
+    endpoint: _endpoint,
+    converter: converter,
+    apiService: _apiService,
+    authenticated: _authenticated,
+    defaultHeaders: _defaultHeaders,
+    defaultQueryParameter: _defaultQueryParameters,
+  );
 
   /// Change the multiplicity of the endpoint
   Endpoint<Response, Request> changeMultiplicity<Response, Request>(
     ApiConverter<Response, Request> Function(
       MultiplicitySupportedConverter<ResponseModel, RequestModel> converter,
-    ) changer,
-  ) =>
-      withConverter(
-        changer(
-          _converter
-              as MultiplicitySupportedConverter<ResponseModel, RequestModel>,
-        ),
-      );
+    )
+    changer,
+  ) => withConverter(
+    changer(
+      _converter as MultiplicitySupportedConverter<ResponseModel, RequestModel>,
+    ),
+  );
 
   /// Execute a GET request.
   Future<ApiResponse<ResponseModel>> get({
     Map<String, String>? headers,
-    Map<String, dynamic /*String?|Iterable<String>*/ >? queryParameters,
+    Map<String, dynamic /*String?|Iterable<String>*/>? queryParameters,
     RequestModel? requestModel,
     Encoding? encoding,
-  }) async =>
-      _request(
-        requestMethod: RequestMethod.get,
-        headers: headers,
-        queryParameters: queryParameters,
-        requestModel: requestModel,
-        encoding: encoding,
-      );
+  }) async => _request(
+    requestMethod: RequestMethod.get,
+    headers: headers,
+    queryParameters: queryParameters,
+    requestModel: requestModel,
+    encoding: encoding,
+  );
 
   /// Execute a DELETE request.
   Future<ApiResponse<ResponseModel>> delete({
     Map<String, String>? headers,
-    Map<String, dynamic /*String?|Iterable<String>*/ >? queryParameters,
+    Map<String, dynamic /*String?|Iterable<String>*/>? queryParameters,
     RequestModel? requestModel,
     Encoding? encoding,
-  }) async =>
-      _request(
-        requestMethod: RequestMethod.delete,
-        headers: headers,
-        queryParameters: queryParameters,
-        requestModel: requestModel,
-        encoding: encoding,
-      );
+  }) async => _request(
+    requestMethod: RequestMethod.delete,
+    headers: headers,
+    queryParameters: queryParameters,
+    requestModel: requestModel,
+    encoding: encoding,
+  );
 
   /// Execute a PATCH request.
   Future<ApiResponse<ResponseModel>> patch({
     Map<String, String>? headers,
-    Map<String, dynamic /*String?|Iterable<String>*/ >? queryParameters,
+    Map<String, dynamic /*String?|Iterable<String>*/>? queryParameters,
     RequestModel? requestModel,
     Encoding? encoding,
-  }) async =>
-      _request(
-        requestMethod: RequestMethod.patch,
-        headers: headers,
-        queryParameters: queryParameters,
-        requestModel: requestModel,
-        encoding: encoding,
-      );
+  }) async => _request(
+    requestMethod: RequestMethod.patch,
+    headers: headers,
+    queryParameters: queryParameters,
+    requestModel: requestModel,
+    encoding: encoding,
+  );
 
   /// Execute a POST request.
   Future<ApiResponse<ResponseModel>> post({
     Map<String, String>? headers,
-    Map<String, dynamic /*String?|Iterable<String>*/ >? queryParameters,
+    Map<String, dynamic /*String?|Iterable<String>*/>? queryParameters,
     RequestModel? requestModel,
     Encoding? encoding,
-  }) async =>
-      _request(
-        requestMethod: RequestMethod.post,
-        headers: headers,
-        queryParameters: queryParameters,
-        requestModel: requestModel,
-        encoding: encoding,
-      );
+  }) async => _request(
+    requestMethod: RequestMethod.post,
+    headers: headers,
+    queryParameters: queryParameters,
+    requestModel: requestModel,
+    encoding: encoding,
+  );
 
   /// Execute a PUT request.
   Future<ApiResponse<ResponseModel>> put({
     Map<String, String>? headers,
-    Map<String, dynamic /*String?|Iterable<String>*/ >? queryParameters,
+    Map<String, dynamic /*String?|Iterable<String>*/>? queryParameters,
     RequestModel? requestModel,
     Encoding? encoding,
-  }) async =>
-      _request(
-        requestMethod: RequestMethod.put,
-        headers: headers,
-        requestModel: requestModel,
-        queryParameters: queryParameters,
-        encoding: encoding,
-      );
+  }) async => _request(
+    requestMethod: RequestMethod.put,
+    headers: headers,
+    requestModel: requestModel,
+    queryParameters: queryParameters,
+    encoding: encoding,
+  );
 
   Future<ApiResponse<ResponseModel>> _request({
     required RequestMethod requestMethod,
     Map<String, String>? headers,
-    Map<String, dynamic /*String?|Iterable<String>*/ >? queryParameters,
+    Map<String, dynamic /*String?|Iterable<String>*/>? queryParameters,
     RequestModel? requestModel,
     Encoding? encoding,
   }) async {
     var endpoint = _endpoint.replace(
-      queryParameters: {
-        ..._defaultQueryParameters,
-        ...?queryParameters,
-      },
+      queryParameters: {..._defaultQueryParameters, ...?queryParameters},
     );
 
     Object? body;
@@ -455,10 +424,7 @@ class Endpoint<ResponseModel, RequestModel> {
     var response = await _apiService._request(
       endpoint,
       requestMethod,
-      headers: {
-        ..._defaultHeaders,
-        ...?headers,
-      },
+      headers: {..._defaultHeaders, ...?headers},
       body: body,
       encoding: encoding,
       isAuthenticated: _authenticated,
@@ -477,11 +443,7 @@ class Endpoint<ResponseModel, RequestModel> {
       // an exception, but we still would like access to the original response
       // for easier debugging
     } on Exception catch (e, s) {
-      throw ApiException(
-        inner: response,
-        error: e,
-        stackTrace: s,
-      );
+      throw ApiException(inner: response, error: e, stackTrace: s);
     }
   }
 }
@@ -489,11 +451,7 @@ class Endpoint<ResponseModel, RequestModel> {
 /// Exception that's thrown when the Api call resulted in an exception
 class ApiException implements Exception {
   /// Creates an API Exception
-  const ApiException({
-    required this.inner,
-    this.error,
-    this.stackTrace,
-  });
+  const ApiException({required this.inner, this.error, this.stackTrace});
 
   /// the http status code that resulted from a request
   int get statusCode => inner.statusCode;
@@ -511,7 +469,8 @@ class ApiException implements Exception {
   final StackTrace? stackTrace;
 
   @override
-  String toString() => "ApiException: ${inner.request?.url} -> $statusCode. "
+  String toString() =>
+      "ApiException: ${inner.request?.url} -> $statusCode. "
       "\ndetails: $error\n$stackTrace";
 }
 
@@ -519,10 +478,7 @@ class ApiException implements Exception {
 class ApiResponse<Model> {
   /// Create an API response
   @visibleForTesting
-  const ApiResponse({
-    required this.inner,
-    this.result,
-  });
+  const ApiResponse({required this.inner, this.result});
 
   /// the http status code that resulted from a request
   int get statusCode => inner.statusCode;
