@@ -1,9 +1,9 @@
 // ignore_for_file: avoid_print
 
+import "dart:convert";
 import "dart:io";
 
 import "package:dart_api_service/dart_api_service.dart";
-import "package:fpdart/fpdart.dart";
 
 class MockAuthService extends AuthenticationService {
   @override
@@ -104,5 +104,43 @@ void main() async {
       print(e);
   }
 
+  await mockedExample();
+
   exit(1);
+}
+
+/// Shows how to fake responses without a mocking library.
+Future<void> mockedExample() async {
+  final mockedService = HttpApiService<Object>.mocked(
+    baseUrl: Uri.parse("https://jsonplaceholder.typicode.com"),
+    mocks: [
+      (service) => service
+          .endpoint("/posts/:post/comments")
+          .withVariables({"post": 1})
+          .getMocker()
+          .returns(
+            (request) => jsonEncode([
+              {
+                "postId": 1,
+                "id": 1,
+                "name": "mocked",
+                "email": "mock@example.com",
+                "body": request.queryParameters["body"] ?? "",
+              },
+            ]),
+          ),
+    ],
+  );
+
+  final mocked = await mockedService
+      .endpoint("/posts/1/comments")
+      .withConverter(ApiConverter.fromSerializable(PostComment.fromMap).list())
+      .get(queryParameters: {"body": "hello"})
+      .run();
+  print(mocked);
+
+  // Nothing is mocked for this path, so this results in an
+  // ApiConnectionFailureException explaining why.
+  final unmocked = await mockedService.endpoint("/other").get().run();
+  print(unmocked);
 }
