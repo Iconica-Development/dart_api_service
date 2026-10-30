@@ -11,14 +11,12 @@ class HttpApiService<DefaultRepresentation extends Object> {
   HttpApiService({
     required this._baseUrl,
     this.authenticationService = const EmptyAuthService(),
-    ApiConverter<DefaultRepresentation, DefaultRepresentation>?
-    apiResponseConverter,
+    ApiConverter<DefaultRepresentation, DefaultRepresentation>? apiResponseConverter,
     this._defaultHeaders = const {},
     this._defaultQueryParameters = const {},
     this.allResponsesAllowed = false,
     http.Client? client,
-  }) : _apiResponseConverter =
-           apiResponseConverter ?? NonConverter<DefaultRepresentation>(),
+  }) : _apiResponseConverter = apiResponseConverter ?? NonConverter<DefaultRepresentation>(),
        _client = client ?? http.Client();
 
   /// Creates an [HttpApiService] whose client is a [MockHttpClient] that
@@ -48,14 +46,10 @@ class HttpApiService<DefaultRepresentation extends Object> {
   /// reason no mock could be resolved.
   factory HttpApiService.mocked({
     required Uri baseUrl,
-    required List<
-      MockDefinition Function(HttpApiService<DefaultRepresentation>)
-    >
-    mocks,
+    required List<MockDefinition Function(HttpApiService<DefaultRepresentation>)> mocks,
     http.Client? fallbackClient,
     AuthenticationService authenticationService = const EmptyAuthService(),
-    ApiConverter<DefaultRepresentation, DefaultRepresentation>?
-    apiResponseConverter,
+    ApiConverter<DefaultRepresentation, DefaultRepresentation>? apiResponseConverter,
     Map<String, String> defaultHeaders = const {},
     Map<String, String> defaultQueryParameters = const {},
     bool allResponsesAllowed = false,
@@ -74,8 +68,7 @@ class HttpApiService<DefaultRepresentation extends Object> {
     return service;
   }
 
-  final ApiConverter<DefaultRepresentation, DefaultRepresentation>
-  _apiResponseConverter;
+  final ApiConverter<DefaultRepresentation, DefaultRepresentation> _apiResponseConverter;
   final Uri _baseUrl;
 
   /// The authentication service used to retrieve credentials.
@@ -199,8 +192,7 @@ class HttpApiService<DefaultRepresentation extends Object> {
   });
 
   TaskEither<ApiException, AuthCredentials> _credentials(
-    TaskEither<CredentialRetrievalFailedException, AuthCredentials> Function()
-    retrieve,
+    TaskEither<CredentialRetrievalFailedException, AuthCredentials> Function() retrieve,
   ) => retrieve().mapLeft(ApiAuthenticationFailedException.new);
 
   TaskEither<ApiException, http.Response> _upload({
@@ -309,9 +301,7 @@ class Endpoint<ResponseModel, RequestModel> {
       return .left(ApiResponseException(inner: response));
     }
 
-    return _converter
-        .toRepresentation(response.body)
-        .map((result) => ApiResponse(inner: response, result: result));
+    return _converter.toRepresentation(response.body).map((result) => ApiResponse(inner: response, result: result));
   }
 
   /// Created a new endpoint from this endpoint.
@@ -393,8 +383,7 @@ class Endpoint<ResponseModel, RequestModel> {
   ) {
     final newPath = variables.entries.fold(
       _endpoint.path,
-      (previousValue, element) =>
-          previousValue.replaceAll(":${element.key}", "${element.value}"),
+      (previousValue, element) => previousValue.replaceAll(":${element.key}", "${element.value}"),
     );
     return Endpoint._(
       endpoint: _endpoint.replace(path: newPath),
@@ -443,8 +432,7 @@ class Endpoint<ResponseModel, RequestModel> {
   /// Creates a mocker for DELETE requests to this endpoint.
   EndpointMocker deleteMocker() => _mocker(RequestMethod.delete);
 
-  EndpointMocker _mocker(RequestMethod method) =>
-      EndpointMocker(endpoint: _endpoint, method: method);
+  EndpointMocker _mocker(RequestMethod method) => EndpointMocker(endpoint: _endpoint, method: method);
 
   /// Marks that this method requires authentication to execute.
   Endpoint<ResponseModel, RequestModel> authenticate() => Endpoint._(
@@ -613,8 +601,7 @@ final class ResponseObjectSerializationApiException extends ApiException {
 }
 
 /// Exception thrown when the api call results in a connection failure
-final class const ApiConnectionFailureException({this.reason})
-    extends ApiException {
+final class const ApiConnectionFailureException({this.reason}) extends ApiException {
   ///
   this;
 
@@ -629,8 +616,7 @@ final class const ApiCallFailedException() extends ApiException {
 }
 
 /// Exception returned when the credentials could not be retrieved
-final class const ApiAuthenticationFailedException(this.inner)
-    extends ApiException {
+final class const ApiAuthenticationFailedException(this.inner) extends ApiException {
   ///
   this;
 

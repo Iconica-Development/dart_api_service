@@ -64,11 +64,7 @@ void main() {
           defaultHeaders: testHeaders,
         );
 
-        await sut
-            .endpoint("/")
-            .withConverter(const NonConverter())
-            .post()
-            .run();
+        await sut.endpoint("/").withConverter(const NonConverter()).post().run();
 
         verify(getDefinition).called(1);
       });
@@ -97,8 +93,7 @@ void main() {
       test("get", () async {
         final expected = Response("test", 200);
 
-        Future<Response> getDefinition() =>
-            client.get(any<Uri>(), headers: any(named: "headers"));
+        Future<Response> getDefinition() => client.get(any<Uri>(), headers: any(named: "headers"));
 
         when(getDefinition).thenAnswer((invocation) async => expected);
 
@@ -180,8 +175,7 @@ void main() {
               .withVariables({"id": "1"})
               .getMocker()
               .returns(
-                (request) =>
-                    jsonEncode({"something": request.queryParameters["test"]}),
+                (request) => jsonEncode({"something": request.queryParameters["test"]}),
               ),
         ],
       );
@@ -199,10 +193,7 @@ void main() {
       final service = HttpApiService<Object>.mocked(
         baseUrl: baseUrl,
         mocks: [
-          (service) => service
-              .endpoint("/test/:id")
-              .postMocker()
-              .returns((_) => "", statusCode: 201),
+          (service) => service.endpoint("/test/:id").postMocker().returns((_) => "", statusCode: 201),
         ],
       );
 
@@ -235,8 +226,7 @@ void main() {
     test("delegates unmatched requests to the fallback client", () async {
       registerFallbackValue(Request("GET", Uri()));
       final fallback = MockedClient();
-      when(() => fallback.send(any()))
-          .thenAnswer((_) async => StreamedResponse(Stream.value([]), 202));
+      when(() => fallback.send(any())).thenAnswer((_) async => StreamedResponse(Stream.value([]), 202));
 
       final service = HttpApiService<Object>.mocked(
         baseUrl: baseUrl,

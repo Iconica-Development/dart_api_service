@@ -7,8 +7,7 @@ import "package:dart_api_service/dart_api_service.dart";
 
 class MockAuthService extends AuthenticationService {
   @override
-  TaskEither<CredentialRetrievalFailedException, AuthCredentials>
-  getCredentials() => .of(MockCredentials());
+  TaskEither<CredentialRetrievalFailedException, AuthCredentials> getCredentials() => .of(MockCredentials());
 }
 
 class MockCredentials implements AuthCredentials {
