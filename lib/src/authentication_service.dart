@@ -15,8 +15,7 @@ abstract class AuthenticationService<T extends AuthCredentials> {
   /// If you want to apply custom refresh logic
   /// you can override this function. By default it will try to retrieve the
   /// credentials without any refresh information.
-  TaskEither<CredentialRetrievalFailedException, T> refreshCredentials() =>
-      getCredentials();
+  TaskEither<CredentialRetrievalFailedException, T> refreshCredentials() => getCredentials();
 }
 
 /// A generic interface to define AuthCredentials;
@@ -30,8 +29,7 @@ class EmptyAuthService extends AuthenticationService<EmptyAuth> {
   /// creates an empty auth service
   const EmptyAuthService();
   @override
-  TaskEither<CredentialRetrievalFailedException, EmptyAuth> getCredentials() =>
-      .of(EmptyAuth());
+  TaskEither<CredentialRetrievalFailedException, EmptyAuth> getCredentials() => .of(EmptyAuth());
 }
 
 /// Default no auth credentials if none are provided
@@ -52,11 +50,10 @@ class JWTAuthCredentials implements AuthCredentials {
   ///
   /// This uses a snake_case naming convention. If your map does not conform to
   /// this, please use the standard constructer.
-  factory JWTAuthCredentials.fromMap(Map<String, dynamic> map) =>
-      JWTAuthCredentials(
-        refreshToken: map["refresh_token"],
-        accessToken: map["access_token"],
-      );
+  factory JWTAuthCredentials.fromMap(Map<String, dynamic> map) => JWTAuthCredentials(
+    refreshToken: map["refresh_token"],
+    accessToken: map["access_token"],
+  );
 
   /// The token from which an access token can be retrieved.
   final String refreshToken;

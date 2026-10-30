@@ -116,9 +116,7 @@ class MockDefinition {
       return false;
     }
     final url = request.url;
-    if (url.scheme != endpoint.scheme ||
-        url.host != endpoint.host ||
-        url.port != endpoint.port) {
+    if (url.scheme != endpoint.scheme || url.host != endpoint.host || url.port != endpoint.port) {
       return false;
     }
 
@@ -202,8 +200,7 @@ class MockHttpClient extends http.BaseClient {
     );
   }
 
-  String _describe(MockDefinition mock) =>
-      "${mock.method.name.toUpperCase()} ${mock.endpoint.path}";
+  String _describe(MockDefinition mock) => "${mock.method.name.toUpperCase()} ${mock.endpoint.path}";
 
   @override
   void close() => fallbackClient?.close();

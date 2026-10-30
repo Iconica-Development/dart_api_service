@@ -4,12 +4,10 @@ import "package:dart_api_service/src/api_service.dart";
 import "package:fpdart/fpdart.dart";
 
 /// Result of converting a response body into a representation.
-typedef ToRepresentationResult<T> =
-    Either<RequestObjectSerializationApiException, T>;
+typedef ToRepresentationResult<T> = Either<RequestObjectSerializationApiException, T>;
 
 /// Result of converting a representation into a request body.
-typedef FromRepresentationResult =
-    Either<ResponseObjectSerializationApiException, Object>;
+typedef FromRepresentationResult = Either<ResponseObjectSerializationApiException, Object>;
 
 /// Interface defining the behaviour of a converter.
 ///
@@ -32,13 +30,12 @@ abstract interface class ApiConverter<Result, RequestObject> {
 
   /// Creates a modelJsonResponseConverter for a model
   /// implementing [ApiSerializable]
-  static ModelJsonResponseConverter<T, T> fromSerializable<
-    T extends ApiSerializable
-  >(T Function(Map<String, dynamic>) deserialize) =>
-      ModelJsonResponseConverter<T, T>(
-        deserialize: deserialize,
-        serialize: (t) => t.toMap(),
-      );
+  static ModelJsonResponseConverter<T, T> fromSerializable<T extends ApiSerializable>(
+    T Function(Map<String, dynamic>) deserialize,
+  ) => ModelJsonResponseConverter<T, T>(
+    deserialize: deserialize,
+    serialize: (t) => t.toMap(),
+  );
 }
 
 /// Serializable object for quick converter creation
@@ -63,51 +60,45 @@ class NonConverter<T> implements ApiConverter<T, T> {
   const NonConverter();
 
   @override
-  FromRepresentationResult fromRepresentation(T representation) =>
-      _fromRepresentation(() => representation as Object);
+  FromRepresentationResult fromRepresentation(T representation) => _fromRepresentation(() => representation as Object);
 
   @override
-  ToRepresentationResult<T> toRepresentation(Object object) =>
-      _toRepresentation(() => object as T);
+  ToRepresentationResult<T> toRepresentation(Object object) => _toRepresentation(() => object as T);
 }
 
-ToRepresentationResult<T> _toRepresentation<T>(T Function() convert) =>
-    Either.tryCatch(
-      convert,
-      (error, stackTrace) => RequestObjectSerializationApiException(
-        error: error,
-        stackTrace: stackTrace,
-      ),
-    );
-
-Either<ResponseObjectSerializationApiException, T>
-_fromRepresentation<T extends Object>(T Function() convert) => Either.tryCatch(
+ToRepresentationResult<T> _toRepresentation<T>(T Function() convert) => Either.tryCatch(
   convert,
-  (error, stackTrace) => ResponseObjectSerializationApiException(
+  (error, stackTrace) => RequestObjectSerializationApiException(
     error: error,
     stackTrace: stackTrace,
   ),
 );
+
+Either<ResponseObjectSerializationApiException, T> _fromRepresentation<T extends Object>(T Function() convert) =>
+    Either.tryCatch(
+      convert,
+      (error, stackTrace) => ResponseObjectSerializationApiException(
+        error: error,
+        stackTrace: stackTrace,
+      ),
+    );
 
 /// definition of a standard json object representation in dart
 typedef JsonObject = Map<String, dynamic>;
 
 /// Translates String to a `Map<String, dynamic>`
 class MapJsonResponseConverter
-    implements
-        ApiConverter<JsonObject, JsonObject>,
-        MultiplicitySupportedConverter<JsonObject, JsonObject> {
+    implements ApiConverter<JsonObject, JsonObject>, MultiplicitySupportedConverter<JsonObject, JsonObject> {
   /// Creates a MapJsonResponseConverter.
   const MapJsonResponseConverter();
 
   @override
-  ToRepresentationResult<JsonObject> toRepresentation(Object object) =>
-      _toRepresentation(() {
-        if (object is! String || object.isEmpty) {
-          throw FormatException("Expected a non-empty JSON string", object);
-        }
-        return jsonDecode(object) as JsonObject;
-      });
+  ToRepresentationResult<JsonObject> toRepresentation(Object object) => _toRepresentation(() {
+    if (object is! String || object.isEmpty) {
+      throw FormatException("Expected a non-empty JSON string", object);
+    }
+    return jsonDecode(object) as JsonObject;
+  });
 
   @override
   FromRepresentationResult fromRepresentation(
@@ -115,8 +106,7 @@ class MapJsonResponseConverter
   ) => _fromRepresentation(() => jsonEncode(representation));
 
   @override
-  ApiConverter<List<JsonObject>, List<JsonObject>> list() =>
-      const ListMapJsonResponseConverter();
+  ApiConverter<List<JsonObject>, List<JsonObject>> list() => const ListMapJsonResponseConverter();
 
   @override
   ApiConverter<JsonObject, JsonObject> single() => this;
@@ -139,33 +129,27 @@ class ListMapJsonResponseConverter
   ) => _fromRepresentation(() => jsonEncode(representation));
 
   @override
-  ToRepresentationResult<ListMapJsonResponse> toRepresentation(Object object) =>
-      _toRepresentation(() {
-        final result = jsonDecode(object as String);
-        if (result is! List) {
-          throw FormatException("Expected a JSON list", object);
-        }
-        return [
-          for (final entry in result)
-            if (entry is Map<String, dynamic>)
-              entry
-            else
-              throw FormatException("Expected a JSON object in list", entry),
-        ];
-      });
+  ToRepresentationResult<ListMapJsonResponse> toRepresentation(Object object) => _toRepresentation(() {
+    final result = jsonDecode(object as String);
+    if (result is! List) {
+      throw FormatException("Expected a JSON list", object);
+    }
+    return [
+      for (final entry in result)
+        if (entry is Map<String, dynamic>) entry else throw FormatException("Expected a JSON object in list", entry),
+    ];
+  });
 
   @override
   ApiConverter<List<JsonObject>, List<JsonObject>> list() => this;
 
   @override
-  ApiConverter<JsonObject, JsonObject> single() =>
-      const MapJsonResponseConverter();
+  ApiConverter<JsonObject, JsonObject> single() => const MapJsonResponseConverter();
 }
 
 /// A simple converter that parses a JSON string into a Map.
 /// This is ideal for handling simple JSON object responses.
-class JsonMapResponseConverter
-    implements ApiConverter<Map<String, dynamic>, void> {
+class JsonMapResponseConverter implements ApiConverter<Map<String, dynamic>, void> {
   /// Creates an instance of [JsonMapResponseConverter].
   const JsonMapResponseConverter();
 
@@ -186,37 +170,30 @@ class JsonMapResponseConverter
 
 /// A serializer made to support custom models to and from json mappings.
 class ModelJsonResponseConverter<ResponseModel, RequestModel>
-    implements
-        ApiConverter<ResponseModel, RequestModel>,
-        MultiplicitySupportedConverter<ResponseModel, RequestModel> {
+    implements ApiConverter<ResponseModel, RequestModel>, MultiplicitySupportedConverter<ResponseModel, RequestModel> {
   /// Creates a json serializer.
   ModelJsonResponseConverter({
     required this._deserialize,
     required this._serialize,
   });
 
-  final MapJsonResponseConverter _jsonConverter =
-      const MapJsonResponseConverter();
+  final MapJsonResponseConverter _jsonConverter = const MapJsonResponseConverter();
   final ResponseModel Function(Map<String, dynamic>) _deserialize;
   final Map<String, dynamic> Function(RequestModel) _serialize;
 
   @override
   FromRepresentationResult fromRepresentation(RequestModel representation) =>
-      _fromRepresentation(() => _serialize(representation))
-          .flatMap(_jsonConverter.fromRepresentation);
+      _fromRepresentation(() => _serialize(representation)).flatMap(_jsonConverter.fromRepresentation);
 
   @override
   ToRepresentationResult<ResponseModel> toRepresentation(Object object) =>
-      _jsonConverter
-          .toRepresentation(object)
-          .flatMap((map) => _toRepresentation(() => _deserialize(map)));
+      _jsonConverter.toRepresentation(object).flatMap((map) => _toRepresentation(() => _deserialize(map)));
 
   @override
-  ApiConverter<List<ResponseModel>, List<RequestModel>> list() =>
-      ModelListJsonResponseConverter(
-        deserialize: _deserialize,
-        serialize: _serialize,
-      );
+  ApiConverter<List<ResponseModel>, List<RequestModel>> list() => ModelListJsonResponseConverter(
+    deserialize: _deserialize,
+    serialize: _serialize,
+  );
 
   @override
   ApiConverter<ResponseModel, RequestModel> single() => this;
@@ -233,8 +210,7 @@ class ModelListJsonResponseConverter<ResponseModel, RequestModel>
     required this._serialize,
   });
 
-  final ListMapJsonResponseConverter _jsonConverter =
-      const ListMapJsonResponseConverter();
+  final ListMapJsonResponseConverter _jsonConverter = const ListMapJsonResponseConverter();
   final ResponseModel Function(Map<String, dynamic>) _deserialize;
   final Map<String, dynamic> Function(RequestModel) _serialize;
 
@@ -246,28 +222,25 @@ class ModelListJsonResponseConverter<ResponseModel, RequestModel>
   ).flatMap(_jsonConverter.fromRepresentation);
 
   @override
-  ToRepresentationResult<List<ResponseModel>> toRepresentation(Object object) =>
-      _jsonConverter
-          .toRepresentation(object)
-          .flatMap(
-            (maps) => _toRepresentation(() => maps.map(_deserialize).toList()),
-          );
+  ToRepresentationResult<List<ResponseModel>> toRepresentation(Object object) => _jsonConverter
+      .toRepresentation(object)
+      .flatMap(
+        (maps) => _toRepresentation(() => maps.map(_deserialize).toList()),
+      );
 
   @override
   ApiConverter<List<ResponseModel>, List<RequestModel>> list() => this;
 
   @override
-  ApiConverter<ResponseModel, RequestModel> single() =>
-      ModelJsonResponseConverter(
-        deserialize: _deserialize,
-        serialize: _serialize,
-      );
+  ApiConverter<ResponseModel, RequestModel> single() => ModelJsonResponseConverter(
+    deserialize: _deserialize,
+    serialize: _serialize,
+  );
 }
 
 /// A converter that only supports serialization,
 /// ideal for write only endpoints
-class WriteOnlyJsonMapResponseConverter
-    implements ApiConverter<void, Map<String, dynamic>> {
+class WriteOnlyJsonMapResponseConverter implements ApiConverter<void, Map<String, dynamic>> {
   /// Creates a WriteOnlyJsonMapResponseConverter.
   const WriteOnlyJsonMapResponseConverter();
 
@@ -282,8 +255,7 @@ class WriteOnlyJsonMapResponseConverter
 
 /// A converter that only supports deserialization,
 /// ideal for read only endpoints
-class ReadOnlyJsonMapResponseConverter
-    implements ApiConverter<Map<String, dynamic>, void> {
+class ReadOnlyJsonMapResponseConverter implements ApiConverter<Map<String, dynamic>, void> {
   /// Creates a ReadOnlyJsonMapResponseConverter.
   const ReadOnlyJsonMapResponseConverter();
 
@@ -300,8 +272,7 @@ class ReadOnlyJsonMapResponseConverter
 
 /// A converter that only supports serialization,
 /// ideal for write only endpoints
-class WriteOnlyModelJsonResponseConverter<RequestModel>
-    implements ApiConverter<void, RequestModel> {
+class WriteOnlyModelJsonResponseConverter<RequestModel> implements ApiConverter<void, RequestModel> {
   /// Creates a write only json serializer.
   WriteOnlyModelJsonResponseConverter({required this._serialize});
 
@@ -317,8 +288,7 @@ class WriteOnlyModelJsonResponseConverter<RequestModel>
 
 /// A converter that only supports deserialization,
 /// ideal for read only endpoints
-class ReadOnlyModelJsonResponseConverter<ResponseModel>
-    implements ApiConverter<ResponseModel, void> {
+class ReadOnlyModelJsonResponseConverter<ResponseModel> implements ApiConverter<ResponseModel, void> {
   /// Creates a read only json serializer.
   ReadOnlyModelJsonResponseConverter({required this._deserialize});
 
